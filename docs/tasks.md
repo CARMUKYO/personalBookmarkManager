@@ -35,7 +35,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 2: Database
 
-- [ ] **2.1 Prisma schema: User**
+- [x] **2.1 Prisma schema: User**
   - **What:** Install Prisma with SQLite. Define `User` (id, email unique, passwordHash, createdAt) and run the first migration.
   - **Acceptance criteria:**
     - `npx prisma migrate dev` creates the database

@@ -93,7 +93,8 @@ Backend config lives in `server/.env` (git-ignored). Copy `server/.env.example` 
 cd server && npm install
 npm run dev          # start API on http://localhost:3000
 npm test             # run backend tests
-npx prisma migrate dev   # apply schema changes
+npm run db:migrate  # create/apply a migration after editing schema.prisma (use: npx prisma migrate dev --name <name>)
+npm run db:generate # regenerate the Prisma client (also runs on npm install)
 
 # frontend
 cd client && npm install

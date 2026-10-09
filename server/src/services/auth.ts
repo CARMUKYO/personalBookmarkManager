@@ -24,6 +24,16 @@ export async function loginUser(prisma: PrismaClient, email: string, password: s
   return { id: user.id, email: user.email, createdAt: user.createdAt };
 }
 
+export async function getUserById(prisma: PrismaClient, id: number) {
+  const user = await prisma.user.findUnique({ where: { id }, select: publicUserSelect });
+
+  // A valid token can outlive its account (e.g. the user was deleted), so treat that as logged out.
+  if (!user) {
+    throw new HttpError(401, "UNAUTHORIZED", "Not logged in");
+  }
+  return user;
+}
+
 export async function registerUser(prisma: PrismaClient, email: string, password: string) {
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 

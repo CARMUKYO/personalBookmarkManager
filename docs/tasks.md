@@ -83,7 +83,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Logout clears the cookie
   - **Depends on:** 3.2
 
-- [ ] **3.4 `requireAuth` middleware and `/api/auth/me`**
+- [x] **3.4 `requireAuth` middleware and `/api/auth/me`**
   - **What:** Middleware that verifies the JWT cookie and attaches `req.userId`. `GET /api/auth/me` returns the current user.
   - **Acceptance criteria:**
     - No cookie, a bad token, or an expired token all return 401

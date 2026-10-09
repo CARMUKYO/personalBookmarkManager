@@ -2,11 +2,10 @@ import { Router, type CookieOptions } from "express";
 import { z } from "zod";
 import type { Config } from "../config.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { requireAuth } from "../middleware/requireAuth.js";
 import { validateBody } from "../middleware/validate.js";
-import { loginUser, registerUser } from "../services/auth.js";
-import { signToken, TOKEN_TTL_SECONDS } from "../services/token.js";
-
-export const AUTH_COOKIE = "token";
+import { getUserById, loginUser, registerUser } from "../services/auth.js";
+import { AUTH_COOKIE, signToken, TOKEN_TTL_SECONDS } from "../services/token.js";
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -52,6 +51,12 @@ export function authRouter(
 
     // The token travels only in the cookie, never in the response body.
     res.cookie(AUTH_COOKIE, token, { ...cookieOptions, maxAge: TOKEN_TTL_SECONDS * 1000 });
+    res.json({ user });
+  });
+
+  // The current user, read from the verified token. Used by the frontend to restore a session on page reload.
+  router.get("/me", requireAuth(config), async (req, res) => {
+    const user = await getUserById(prisma, req.userId!);
     res.json({ user });
   });
 

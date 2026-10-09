@@ -4,8 +4,15 @@ import type { Config } from "../config.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { idParamSchema, validateBody, validateParams, validateQuery } from "../middleware/validate.js";
-import { paginationQuerySchema, type Pagination } from "../pagination.js";
-import { createBookmark, deleteBookmark, getBookmark, listBookmarks, updateBookmark } from "../services/bookmarks.js";
+import { paginationQuerySchema } from "../pagination.js";
+import {
+  createBookmark,
+  deleteBookmark,
+  getBookmark,
+  listBookmarks,
+  updateBookmark,
+  type BookmarkListQuery,
+} from "../services/bookmarks.js";
 
 // Only http(s) links: z.url() alone also accepts "javascript:..." which is dangerous once rendered as a link.
 const httpUrl = z
@@ -47,6 +54,17 @@ const updateBookmarkSchema = z
   .partial()
   .refine((body) => Object.keys(body).length > 0, "Send at least one field to change");
 
+// q is the search keyword. Leading/trailing spaces are ignored, and an empty q means "no search".
+// A repeated ?q=a&q=b is not a string, so it is rejected with 400.
+const listQuerySchema = paginationQuerySchema.extend({
+  q: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((value) => value || undefined)
+    .optional(),
+});
+
 export function bookmarksRouter(
   prisma: PrismaClient,
   config: Pick<Config, "jwtSecret">,
@@ -56,9 +74,9 @@ export function bookmarksRouter(
   // Every bookmark route needs a logged-in user, including ones added later.
   router.use(requireAuth(config));
 
-  router.get("/", validateQuery(paginationQuerySchema), async (req, res) => {
-    const pagination = res.locals.query as Pagination;
-    res.json(await listBookmarks(prisma, req.userId!, pagination));
+  router.get("/", validateQuery(listQuerySchema), async (req, res) => {
+    const query = res.locals.query as BookmarkListQuery;
+    res.json(await listBookmarks(prisma, req.userId!, query));
   });
 
   router.post("/", validateBody(createBookmarkSchema), async (req, res) => {

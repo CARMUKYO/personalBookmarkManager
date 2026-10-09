@@ -95,9 +95,23 @@ export async function deleteBookmark(prisma: PrismaClient, userId: number, id: n
   if (count === 0) throw notFound();
 }
 
-export async function listBookmarks(prisma: PrismaClient, userId: number, pagination: Pagination) {
-  // The same filter for the rows and the count: total must only count this user's bookmarks.
-  const where = { userId };
+export type BookmarkListQuery = Pagination & {
+  q?: string | undefined; // keyword to look for in title, url and description
+};
+
+export async function listBookmarks(prisma: PrismaClient, userId: number, query: BookmarkListQuery) {
+  const { q } = query;
+
+  // userId and the search sit side by side, so BOTH must match: a keyword can never reach other users' bookmarks.
+  // contains is a case-insensitive match for plain English letters on SQLite (accented letters are case-sensitive).
+  // Prisma passes q as a bound parameter, so quotes in it cannot change the SQL.
+  // It does NOT escape the LIKE wildcards % and _, so those still act as wildcards.
+  const search = q
+    ? { OR: [{ title: { contains: q } }, { url: { contains: q } }, { description: { contains: q } }] }
+    : {};
+
+  // The same filter for the rows and the count: total must only count the matching bookmarks of this user.
+  const where = { userId, ...search };
   const [total, bookmarks] = await Promise.all([
     prisma.bookmark.count({ where }),
     prisma.bookmark.findMany({
@@ -106,9 +120,9 @@ export async function listBookmarks(prisma: PrismaClient, userId: number, pagina
       // id breaks ties between equal timestamps. Without it the order of those rows is undefined,
       // so they could repeat or go missing between pages.
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      skip: skipFor(pagination),
-      take: pagination.pageSize,
+      skip: skipFor(query),
+      take: query.pageSize,
     }),
   ]);
-  return buildPage(bookmarks, total, pagination);
+  return buildPage(bookmarks, total, query);
 }

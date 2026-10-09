@@ -203,6 +203,43 @@ describe("Bob's bookmark list never includes Alice's bookmarks", () => {
   });
 });
 
+describe("Bob cannot search into Alice's bookmarks", () => {
+  // Each keyword appears in exactly one field of one of Alice's bookmarks, so every field is checked on its own.
+  beforeEach(async () => {
+    await prisma.bookmark.create({ data: { url: "https://alice.example.com/a", title: "zebratitle", userId: alice.id } });
+    await prisma.bookmark.create({ data: { url: "https://zebraurl.example.com", title: "plain", userId: alice.id } });
+    await prisma.bookmark.create({
+      data: { url: "https://alice.example.com/b", title: "plain2", description: "zebradesc", userId: alice.id },
+    });
+  });
+
+  it.each(["zebratitle", "zebraurl", "zebradesc", "alice"])(
+    "searching for %s finds nothing and counts nothing",
+    async (term) => {
+      const res = await send("get", `/api/bookmarks?q=${term}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ data: [], total: 0, totalPages: 0 });
+    },
+  );
+
+  it("finds only his own bookmark when both users have a matching one", async () => {
+    await prisma.bookmark.create({ data: { url: "https://bob.example.com", title: "zebratitle too", userId: bob.id } });
+
+    const res = await send("get", "/api/bookmarks?q=zebra");
+
+    expect(res.body.total).toBe(1);
+    expect(res.body.data.map((b: { title: string }) => b.title)).toEqual(["zebratitle too"]);
+  });
+
+  it("a match-everything search (q=%) still stays within his own bookmarks", async () => {
+    const res = await send("get", "/api/bookmarks?q=%25");
+
+    expect(res.body.total).toBe(1);
+    expect(res.body.data.map((b: { id: number }) => b.id)).toEqual([bobBookmarkId]);
+  });
+});
+
 describe("Bob cannot use Alice's categories", () => {
   const INVALID_CATEGORIES = {
     error: { code: "INVALID_CATEGORY_IDS", message: "One or more categories do not exist" },

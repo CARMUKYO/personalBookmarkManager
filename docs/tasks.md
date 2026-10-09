@@ -148,7 +148,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Only the logged-in user's bookmarks are counted and returned
   - **Depends on:** 4.1, 2.3
 
-- [ ] **6.2 Keyword search**
+- [x] **6.2 Keyword search**
   - **What:** Add `q`, matching title, url and description (case-insensitive).
   - **Acceptance criteria:**
     - Matches in any of the three fields are returned
@@ -242,7 +242,8 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 ## Open questions and assumptions
 
 1. **Stack:** I assumed the stack in `AGENTS.md` (Express, Prisma/SQLite, React). Change that file first if you want something else.
-2. **Search:** keyword search uses simple `contains` matching. SQLite full-text search is a possible later upgrade.
+2. **Search:** keyword search uses simple `contains` matching on the whole search text (one phrase, max 100 characters). SQLite full-text search is a possible later upgrade.
+   Known limitations on SQLite: matching ignores case for plain English letters only (`CAFÉ` does not match `café`), and `%` and `_` in the search text act as LIKE wildcards instead of literal characters (so `100%` also matches `1000 done`). Neither can expose another user's data.
 3. **Auth extras:** no email verification, password reset, or "remember me". Out of scope for now.
 4. **Tags vs categories:** I treated them as the same thing (many-to-many). Say so if you want a single category per bookmark instead; that simplifies the database.
 5. **pageSize above 100:** decided in 5.1/6.1: it is rejected with a 400 (not capped), for both categories and bookmarks.

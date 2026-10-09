@@ -124,7 +124,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 5: Categories API
 
-- [ ] **5.1 Categories CRUD**
+- [x] **5.1 Categories CRUD**
   - **What:** `GET/POST /api/categories`, `PATCH/DELETE /api/categories/:id`, all scoped to the logged-in user.
   - **Acceptance criteria:**
     - Duplicate name for the same user returns 409

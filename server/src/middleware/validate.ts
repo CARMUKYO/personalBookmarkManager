@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import type { ZodType } from "zod";
+import { z, type ZodType } from "zod";
 import { HttpError } from "../errors.js";
 
 function parse<T>(schema: ZodType<T>, data: unknown): T {
@@ -37,3 +37,7 @@ export function validateParams(schema: ZodType): RequestHandler {
     next();
   };
 }
+
+// For routes like /:id. z.coerce turns the "5" from the URL into the number 5.
+// Anything else (abc, 0, -1, 1.5) is a 400.
+export const idParamSchema = z.object({ id: z.coerce.number().int().positive() });

@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Config } from "../config.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { requireAuth } from "../middleware/requireAuth.js";
-import { validateBody, validateParams } from "../middleware/validate.js";
+import { idParamSchema, validateBody, validateParams } from "../middleware/validate.js";
 import { createBookmark, deleteBookmark, getBookmark, updateBookmark } from "../services/bookmarks.js";
 
 // Only http(s) links: z.url() alone also accepts "javascript:..." which is dangerous once rendered as a link.
@@ -45,9 +45,6 @@ const updateBookmarkSchema = z
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, "Send at least one field to change");
-
-// z.coerce turns the "5" from the URL into the number 5. Anything else (abc, 0, -1, 1.5) is a 400.
-const idParamSchema = z.object({ id: z.coerce.number().int().positive() });
 
 export function bookmarksRouter(
   prisma: PrismaClient,

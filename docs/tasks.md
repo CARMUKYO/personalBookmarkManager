@@ -101,7 +101,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
       (`assertCategoriesOwned(userId, ids)`) that task 4.2 reuses. The implicit many-to-many table can't enforce this itself.
   - **Depends on:** 3.4, 2.2
 
-- [ ] **4.2 Get one bookmark and update a bookmark**
+- [x] **4.2 Get one bookmark and update a bookmark**
   - **What:** `GET /api/bookmarks/:id` and `PATCH /api/bookmarks/:id`, both including the bookmark's categories.
   - **Acceptance criteria:**
     - Someone else's bookmark returns 404 for both

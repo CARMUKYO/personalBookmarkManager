@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { HttpError } from "../errors.js";
 import { assertCategoriesOwned } from "./categories.js";
 
 // Only these fields leave the service. userId is left out on purpose: the caller already knows it.
@@ -33,4 +34,55 @@ export async function createBookmark(prisma: PrismaClient, userId: number, input
     },
     select: publicBookmarkSelect,
   });
+}
+
+export type BookmarkChanges = {
+  url?: string | undefined;
+  title?: string | undefined;
+  description?: string | null | undefined;
+  categoryIds?: number[] | undefined;
+};
+
+// "Doesn't exist" and "belongs to someone else" must look identical, so both use this error.
+const notFound = () => new HttpError(404, "NOT_FOUND", "Bookmark not found");
+
+export async function getBookmark(prisma: PrismaClient, userId: number, id: number) {
+  const bookmark = await prisma.bookmark.findFirst({
+    where: { id, userId },
+    select: publicBookmarkSelect,
+  });
+  if (!bookmark) throw notFound();
+  return bookmark;
+}
+
+export async function updateBookmark(
+  prisma: PrismaClient,
+  userId: number,
+  id: number,
+  changes: BookmarkChanges,
+) {
+  // Check ownership first, so someone else's bookmark is a 404 whatever else is in the request.
+  await getBookmark(prisma, userId, id);
+
+  // Only touch categories if they were sent. Sending a list replaces the whole set.
+  const categoryIds = changes.categoryIds && [...new Set(changes.categoryIds)];
+  if (categoryIds) await assertCategoriesOwned(prisma, userId, categoryIds);
+
+  try {
+    // userId is in the where clause too, so the write itself is scoped to the owner.
+    return await prisma.bookmark.update({
+      where: { id, userId },
+      data: {
+        url: changes.url,
+        title: changes.title,
+        description: changes.description,
+        categories: categoryIds && { set: categoryIds.map((categoryId) => ({ id: categoryId })) },
+      },
+      select: publicBookmarkSelect,
+    });
+  } catch (err) {
+    // P2025: the bookmark was deleted between the check above and this update.
+    if ((err as { code?: string }).code === "P2025") throw notFound();
+    throw err;
+  }
 }

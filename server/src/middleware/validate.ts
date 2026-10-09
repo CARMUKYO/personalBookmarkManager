@@ -29,3 +29,11 @@ export function validateQuery(schema: ZodType): RequestHandler {
     next();
   };
 }
+
+// Same idea for URL parameters such as /:id. The validated params go in res.locals.params.
+export function validateParams(schema: ZodType): RequestHandler {
+  return (req, res, next) => {
+    res.locals.params = parse(schema, req.params);
+    next();
+  };
+}

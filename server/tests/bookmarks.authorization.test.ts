@@ -79,6 +79,7 @@ afterAll(async () => {
 
 describe("unauthenticated requests get 401 on every bookmark route", () => {
   const routes: [Method, (id: number) => string, object | undefined][] = [
+    ["get", () => "/api/bookmarks", undefined],
     ["post", () => "/api/bookmarks", { url: "https://evil.example.com", title: "Evil" }],
     ["get", (id) => `/api/bookmarks/${id}`, undefined],
     ["patch", (id) => `/api/bookmarks/${id}`, { title: "Hacked", description: null }],
@@ -163,6 +164,42 @@ describe("Bob cannot touch Alice's bookmarks", () => {
     expect(res.status).toBe(404);
     expect(res.body).toEqual(NOT_FOUND);
     await expectAliceBookmarkUntouched();
+  });
+});
+
+describe("Bob's bookmark list never includes Alice's bookmarks", () => {
+  it("shows only his own bookmarks and counts only those", async () => {
+    const res = await send("get", "/api/bookmarks?pageSize=100");
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((b: { id: number }) => b.id)).toEqual([bobBookmarkId]);
+    expect(res.body.total).toBe(1);
+    expect(JSON.stringify(res.body)).not.toContain("alice");
+  });
+
+  it("stays isolated across pages", async () => {
+    for (const title of ["B1", "B2", "B3"]) {
+      await prisma.bookmark.create({ data: { url: "https://bob.example.com", title, userId: bob.id } });
+    }
+    const seen: number[] = [];
+
+    for (const page of [1, 2, 3, 4]) {
+      const res = await send("get", `/api/bookmarks?page=${page}&pageSize=1`);
+      expect(res.body.total).toBe(4);
+      seen.push(...res.body.data.map((b: { id: number }) => b.id));
+    }
+
+    expect(seen).toHaveLength(4);
+    expect(seen).not.toContain(aliceBookmarkId);
+  });
+
+  it("is empty for a user with no bookmarks, even though others have some", async () => {
+    const carol = await registerUser(prisma, "carol@example.com", "password123");
+    const carolCookie = `token=${await signToken(carol.id, TEST_JWT_SECRET)}`;
+
+    const res = await send("get", "/api/bookmarks", undefined, carolCookie);
+
+    expect(res.body).toMatchObject({ data: [], total: 0 });
   });
 });
 

@@ -3,8 +3,9 @@ import { z } from "zod";
 import type { Config } from "../config.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { requireAuth } from "../middleware/requireAuth.js";
-import { idParamSchema, validateBody, validateParams } from "../middleware/validate.js";
-import { createBookmark, deleteBookmark, getBookmark, updateBookmark } from "../services/bookmarks.js";
+import { idParamSchema, validateBody, validateParams, validateQuery } from "../middleware/validate.js";
+import { paginationQuerySchema, type Pagination } from "../pagination.js";
+import { createBookmark, deleteBookmark, getBookmark, listBookmarks, updateBookmark } from "../services/bookmarks.js";
 
 // Only http(s) links: z.url() alone also accepts "javascript:..." which is dangerous once rendered as a link.
 const httpUrl = z
@@ -54,6 +55,11 @@ export function bookmarksRouter(
 
   // Every bookmark route needs a logged-in user, including ones added later.
   router.use(requireAuth(config));
+
+  router.get("/", validateQuery(paginationQuerySchema), async (req, res) => {
+    const pagination = res.locals.query as Pagination;
+    res.json(await listBookmarks(prisma, req.userId!, pagination));
+  });
 
   router.post("/", validateBody(createBookmarkSchema), async (req, res) => {
     const input = req.body as z.infer<typeof createBookmarkSchema>;

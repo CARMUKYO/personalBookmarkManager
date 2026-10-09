@@ -140,7 +140,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 6: Search, filtering and pagination
 
-- [ ] **6.1 List bookmarks with pagination**
+- [x] **6.1 List bookmarks with pagination**
   - **What:** `GET /api/bookmarks?page=&pageSize=` returning `{ data, page, pageSize, total, totalPages }`, newest first.
   - **Acceptance criteria:**
     - Defaults to page 1, pageSize 20; pageSize above 100 is rejected or capped (decide and document)
@@ -245,7 +245,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 2. **Search:** keyword search uses simple `contains` matching. SQLite full-text search is a possible later upgrade.
 3. **Auth extras:** no email verification, password reset, or "remember me". Out of scope for now.
 4. **Tags vs categories:** I treated them as the same thing (many-to-many). Say so if you want a single category per bookmark instead; that simplifies the database.
-5. **pageSize above 100:** reject vs. cap is left for you to decide in task 6.1.
+5. **pageSize above 100:** decided in 5.1/6.1: it is rejected with a 400 (not capped), for both categories and bookmarks.
 6. **Not included:** importing browser bookmarks, fetching page titles automatically, deployment.
 
 ## Why this order

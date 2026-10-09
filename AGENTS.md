@@ -62,7 +62,7 @@ Every Bookmark and Category belongs to exactly one User.
 - Status codes: 200 OK, 201 created, 204 deleted, 400 validation, 401 not logged in, 404 not found / not yours, 409 conflict.
 - List endpoints are paginated and return:
   `{ "data": [...], "page": 1, "pageSize": 20, "total": 57, "totalPages": 3 }`
-  - Query params: `page` (default 1), `pageSize` (default 20, max 100)
+  - Query params: `page` (default 1), `pageSize` (default 20, max 100; a larger `pageSize` is rejected with 400, not capped)
   - Bookmarks also accept: `q` (search in title, url, description), `categoryId`, `sort` (`newest` | `oldest` | `title`)
 
 ## Security rules (never break these)

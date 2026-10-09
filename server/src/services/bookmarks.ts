@@ -1,5 +1,6 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { HttpError } from "../errors.js";
+import { buildPage, skipFor, type Pagination } from "../pagination.js";
 import { assertCategoriesOwned } from "./categories.js";
 
 // Only these fields leave the service. userId is left out on purpose: the caller already knows it.
@@ -92,4 +93,22 @@ export async function deleteBookmark(prisma: PrismaClient, userId: number, id: n
   // so count 0 means "doesn't exist" or "not yours" (indistinguishable on purpose).
   const { count } = await prisma.bookmark.deleteMany({ where: { id, userId } });
   if (count === 0) throw notFound();
+}
+
+export async function listBookmarks(prisma: PrismaClient, userId: number, pagination: Pagination) {
+  // The same filter for the rows and the count: total must only count this user's bookmarks.
+  const where = { userId };
+  const [total, bookmarks] = await Promise.all([
+    prisma.bookmark.count({ where }),
+    prisma.bookmark.findMany({
+      where,
+      select: publicBookmarkSelect,
+      // id breaks ties between equal timestamps. Without it the order of those rows is undefined,
+      // so they could repeat or go missing between pages.
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip: skipFor(pagination),
+      take: pagination.pageSize,
+    }),
+  ]);
+  return buildPage(bookmarks, total, pagination);
 }

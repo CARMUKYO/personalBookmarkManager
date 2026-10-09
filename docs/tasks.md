@@ -42,7 +42,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - A test can create a user and reading back a duplicate email fails
   - **Depends on:** 1.3
 
-- [ ] **2.2 Prisma schema: Bookmark and Category relations**
+- [x] **2.2 Prisma schema: Bookmark and Category relations**
   - **What:** Add `Bookmark` and `Category`, each with a `userId` foreign key. Add the many-to-many link between them. Category name is unique per user (`@@unique([userId, name])`).
   - **Acceptance criteria:**
     - A bookmark can have several categories and a category several bookmarks

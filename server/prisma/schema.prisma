@@ -8,8 +8,33 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
+  bookmarks    Bookmark[]
+  categories   Category[]
+}
+
+model Bookmark {
+  id          Int        @id @default(autoincrement())
+  url         String
+  title       String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories  Category[]
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookmarks Bookmark[]
+
+  // A name only has to be unique within one user's categories.
+  @@unique([userId, name])
 }

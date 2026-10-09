@@ -31,7 +31,7 @@ server/
     routes/        # Express routers, one file per resource (auth, bookmarks, categories)
     middleware/    # requireAuth, error handler, validation
     services/      # business logic + database queries
-    app.ts         # builds the Express app (no listen() here, so tests can import it)
+    app.ts         # createApp({ prisma }) builds the Express app (no listen() here; dependencies are passed in so tests can use test.db)
     index.ts       # starts the server
   tests/
 client/

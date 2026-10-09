@@ -3,9 +3,12 @@ import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createApp } from "../src/app.js";
+import { createPrismaClient } from "../src/db.js";
 import { HttpError } from "../src/errors.js";
 import { errorHandler, notFoundHandler } from "../src/middleware/errorHandler.js";
 import { validateBody, validateQuery } from "../src/middleware/validate.js";
+
+const prisma = createPrismaClient(process.env.DATABASE_URL!);
 
 // A throwaway app with deliberately failing routes, so the real app stays clean.
 function buildTestApp() {
@@ -47,7 +50,7 @@ afterEach(() => {
 
 describe("not found", () => {
   it("returns 404 in the standard shape for an unknown route", async () => {
-    const res = await request(createApp()).get("/api/nope");
+    const res = await request(createApp({ prisma })).get("/api/nope");
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: { code: "NOT_FOUND", message: "Route not found" } });

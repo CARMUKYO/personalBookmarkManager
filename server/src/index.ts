@@ -1,5 +1,6 @@
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
+import { createPrismaClient } from "./db.js";
 
 // Load server/.env if it exists (real environment variables still take priority).
 try {
@@ -16,6 +17,8 @@ try {
   process.exit(1);
 }
 
-createApp().listen(config.port, () => {
+const prisma = createPrismaClient(config.databaseUrl);
+
+createApp({ prisma }).listen(config.port, () => {
   console.log(`API listening on http://localhost:${config.port}`);
 });

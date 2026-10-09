@@ -66,7 +66,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Invalid input returns 400 with a readable message
   - **Depends on:** 1.1
 
-- [ ] **3.2 Sign-up endpoint**
+- [x] **3.2 Sign-up endpoint**
   - **What:** `POST /api/auth/register` validates email and password (minimum length), hashes with bcrypt, creates the user.
   - **Acceptance criteria:**
     - 201 on success, and the response never contains `passwordHash`

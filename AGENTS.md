@@ -17,7 +17,7 @@ Stay within this stack. Do not add new libraries without asking first.
 - **Language:** TypeScript everywhere
 - **Backend:** Node.js + Express, in `server/`
 - **Database:** SQLite via Prisma ORM (`server/prisma/schema.prisma`)
-- **Auth:** email + password, passwords hashed with bcrypt, JWT stored in an httpOnly cookie
+- **Auth:** email + password, passwords hashed with bcryptjs (pure JS, no native build), JWT stored in an httpOnly cookie
 - **Validation:** zod for every request body and query string
 - **Frontend:** React + Vite, in `client/`
 - **Tests:** Vitest (both sides), Supertest for API routes
@@ -95,6 +95,7 @@ npm run dev          # start API on http://localhost:3000
 npm test             # run backend tests
 npm run db:migrate  # create/apply a migration after editing schema.prisma (use: npx prisma migrate dev --name <name>)
 npm run db:generate # regenerate the Prisma client (also runs on npm install)
+npm run db:seed     # (re)create demo users alice@example.com / bob@example.com, password: password123
 
 # frontend
 cd client && npm install

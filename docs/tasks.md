@@ -50,7 +50,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Deleting a category does NOT delete its bookmarks
   - **Depends on:** 2.1
 
-- [ ] **2.3 Indexes and a seed script**
+- [x] **2.3 Indexes and a seed script**
   - **What:** Add indexes on `userId` and `createdAt`. Write a seed script creating two users with sample bookmarks (about 50 for one user, to test pagination later).
   - **Acceptance criteria:**
     - `npx prisma db seed` runs and can be re-run safely
@@ -97,7 +97,8 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
   - **Acceptance criteria:**
     - `userId` comes from the JWT, never from the request body
     - Invalid URLs are rejected with 400
-    - `categoryIds` that belong to another user are rejected
+    - `categoryIds` that belong to another user are rejected (400, same message as for nonexistent ids), via ONE shared helper
+      (`assertCategoriesOwned(userId, ids)`) that task 4.2 reuses. The implicit many-to-many table can't enforce this itself.
   - **Depends on:** 3.4, 2.2
 
 - [ ] **4.2 Get one bookmark and update a bookmark**

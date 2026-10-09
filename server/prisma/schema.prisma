@@ -26,6 +26,9 @@ model Bookmark {
   userId      Int
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   categories  Category[]
+
+  // Most queries are "this user's bookmarks, newest first".
+  @@index([userId, createdAt])
 }
 
 model Category {

@@ -18,7 +18,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - One Supertest test for `/api/health` passes with `npm test`
   - **Depends on:** none
 
-- [ ] **1.2 Scaffold the frontend**
+- [x] **1.2 Scaffold the frontend**
   - **What:** Create `client/` with React, Vite and TypeScript. Proxy `/api` to the backend in the Vite config.
   - **Acceptance criteria:**
     - `npm run dev` shows a page on port 5173

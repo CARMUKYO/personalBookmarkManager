@@ -75,7 +75,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - The stored password is a hash, not plain text (test checks this)
   - **Depends on:** 2.1, 3.1
 
-- [ ] **3.3 Login and logout endpoints**
+- [x] **3.3 Login and logout endpoints**
   - **What:** `POST /api/auth/login` verifies the password and sets a JWT in an httpOnly cookie. `POST /api/auth/logout` clears it.
   - **Acceptance criteria:**
     - Correct credentials: 200 and a cookie flagged httpOnly

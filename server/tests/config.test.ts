@@ -23,6 +23,7 @@ describe("loadConfig", () => {
       port: 4000,
       jwtSecret: validSecret,
       databaseUrl: "file:./test.db",
+      isProduction: false,
     });
   });
 
@@ -31,5 +32,10 @@ describe("loadConfig", () => {
 
     expect(config.port).toBe(3000);
     expect(config.databaseUrl).toBe("file:./dev.db");
+  });
+
+  it("detects production from NODE_ENV", () => {
+    expect(loadConfig({ JWT_SECRET: validSecret, NODE_ENV: "production" }).isProduction).toBe(true);
+    expect(loadConfig({ JWT_SECRET: validSecret }).isProduction).toBe(false);
   });
 });

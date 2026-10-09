@@ -2,6 +2,7 @@ export type Config = {
   port: number;
   jwtSecret: string;
   databaseUrl: string;
+  isProduction: boolean;
 };
 
 const MIN_SECRET_LENGTH = 32;
@@ -25,5 +26,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port: Number(env.PORT) || 3000,
     jwtSecret,
     databaseUrl: env.DATABASE_URL ?? "file:./dev.db",
+    isProduction: env.NODE_ENV === "production",
   };
 }

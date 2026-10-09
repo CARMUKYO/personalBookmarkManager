@@ -3,9 +3,10 @@ import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
 import { createPrismaClient } from "../src/db.js";
+import { testConfig } from "./helpers.js";
 
 const prisma = createPrismaClient(process.env.DATABASE_URL!);
-const app = createApp({ prisma });
+const app = createApp({ prisma, config: testConfig });
 
 const register = (body: unknown) => request(app).post("/api/auth/register").send(body as object);
 

@@ -72,7 +72,9 @@ Every Bookmark and Category belongs to exactly one User.
 2. If a resource exists but belongs to someone else, return **404**, not 403 (don't reveal it exists).
 3. Never store or log plain-text passwords. Never return `passwordHash` from any endpoint.
 4. Never trust the client for `userId` — take it from the verified JWT only.
-5. Secrets (JWT secret, etc.) come from `.env`. Never commit `.env`; keep `.env.example` up to date.
+5. Login must not reveal whether an email exists: same 401 for unknown email and wrong password, and always run the bcrypt comparison.
+   The JWT (HS256, `sub` = user id only, 7 days) lives only in the httpOnly `token` cookie, never in a response body.
+6. Secrets (JWT secret, etc.) come from `.env`. Never commit `.env`; keep `.env.example` up to date.
 
 ## How to work with me
 

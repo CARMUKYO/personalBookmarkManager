@@ -19,6 +19,6 @@ try {
 
 const prisma = createPrismaClient(config.databaseUrl);
 
-createApp({ prisma }).listen(config.port, () => {
+createApp({ prisma, config }).listen(config.port, () => {
   console.log(`API listening on http://localhost:${config.port}`);
 });

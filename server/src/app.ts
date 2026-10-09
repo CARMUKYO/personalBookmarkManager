@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 // Builds the Express app but does NOT start listening.
 // Keeping this separate from index.ts lets tests import the app directly.
@@ -12,6 +13,10 @@ export function createApp() {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
   });
+
+  // Order matters: these must come after every route.
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

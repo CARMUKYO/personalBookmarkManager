@@ -59,7 +59,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 3: Authentication
 
-- [ ] **3.1 Shared error handling and validation**
+- [x] **3.1 Shared error handling and validation**
   - **What:** Add the global error handler returning `{ "error": { "code", "message" } }` and a zod validation middleware that returns 400 on bad input.
   - **Acceptance criteria:**
     - An unknown route returns 404 in the standard error shape

@@ -56,6 +56,9 @@ Every Bookmark and Category belongs to exactly one User.
 
 - All endpoints under `/api`. REST style, plural nouns: `/api/bookmarks`, `/api/categories`, `/api/auth/login`.
 - JSON in, JSON out. Errors always look like: `{ "error": { "code": "NOT_FOUND", "message": "..." } }`
+  Validation errors add `details: [{ "path": "email", "message": "..." }]`.
+  Throw `HttpError(status, code, message)` from `src/errors.ts` to send an error; never build error JSON by hand.
+  Validate input with `validateBody` / `validateQuery` (`src/middleware/validate.ts`); the validated query is in `res.locals.query`.
 - Status codes: 200 OK, 201 created, 204 deleted, 400 validation, 401 not logged in, 404 not found / not yours, 409 conflict.
 - List endpoints are paginated and return:
   `{ "data": [...], "page": 1, "pageSize": 20, "total": 57, "totalPages": 3 }`

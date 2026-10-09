@@ -132,7 +132,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Deleting a category removes the link but keeps the bookmarks
   - **Depends on:** 3.4, 2.2
 
-- [ ] **5.2 Category authorization tests**
+- [x] **5.2 Category authorization tests**
   - **What:** Same idea as 4.4, for categories.
   - **Acceptance criteria:**
     - User B gets 404 on user A's category for read, edit and delete

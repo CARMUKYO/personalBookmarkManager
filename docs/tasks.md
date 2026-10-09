@@ -115,7 +115,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - 404 if the bookmark doesn't exist or isn't yours, and the other user's bookmark is untouched
   - **Depends on:** 4.1
 
-- [ ] **4.4 Authorization test suite**
+- [x] **4.4 Authorization test suite**
   - **What:** A dedicated test file with two users proving user B can't read, edit or delete user A's bookmarks, and that unauthenticated requests get 401 on every bookmark route.
   - **Acceptance criteria:**
     - Every bookmark route is covered for both cases

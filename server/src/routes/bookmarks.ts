@@ -4,7 +4,7 @@ import type { Config } from "../config.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validateBody, validateParams } from "../middleware/validate.js";
-import { createBookmark, getBookmark, updateBookmark } from "../services/bookmarks.js";
+import { createBookmark, deleteBookmark, getBookmark, updateBookmark } from "../services/bookmarks.js";
 
 // Only http(s) links: z.url() alone also accepts "javascript:..." which is dangerous once rendered as a link.
 const httpUrl = z
@@ -75,6 +75,12 @@ export function bookmarksRouter(
     const changes = req.body as z.infer<typeof updateBookmarkSchema>;
     const bookmark = await updateBookmark(prisma, req.userId!, id, changes);
     res.json({ bookmark });
+  });
+
+  router.delete("/:id", validateParams(idParamSchema), async (req, res) => {
+    const { id } = res.locals.params as z.infer<typeof idParamSchema>;
+    await deleteBookmark(prisma, req.userId!, id);
+    res.status(204).end();
   });
 
   return router;

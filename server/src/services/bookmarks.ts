@@ -86,3 +86,10 @@ export async function updateBookmark(
     throw err;
   }
 }
+
+export async function deleteBookmark(prisma: PrismaClient, userId: number, id: number) {
+  // One query, scoped to the owner. deleteMany returns a count instead of throwing,
+  // so count 0 means "doesn't exist" or "not yours" (indistinguishable on purpose).
+  const { count } = await prisma.bookmark.deleteMany({ where: { id, userId } });
+  if (count === 0) throw notFound();
+}

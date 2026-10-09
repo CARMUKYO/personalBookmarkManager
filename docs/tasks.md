@@ -108,7 +108,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - PATCH can change the title, description and categories
   - **Depends on:** 4.1
 
-- [ ] **4.3 Delete a bookmark**
+- [x] **4.3 Delete a bookmark**
   - **What:** `DELETE /api/bookmarks/:id`.
   - **Acceptance criteria:**
     - 204 on success

@@ -4,6 +4,7 @@ import type { Config } from "./config.js";
 import type { PrismaClient } from "./generated/prisma/client.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./routes/auth.js";
+import { bookmarksRouter } from "./routes/bookmarks.js";
 
 export type AppDeps = {
   prisma: PrismaClient;
@@ -24,6 +25,7 @@ export function createApp({ prisma, config }: AppDeps) {
   });
 
   app.use("/api/auth", authRouter(prisma, config));
+  app.use("/api/bookmarks", bookmarksRouter(prisma, config));
 
   // Order matters: these must come after every route.
   app.use(notFoundHandler);

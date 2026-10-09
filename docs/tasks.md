@@ -92,7 +92,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 4: Bookmarks API (CRUD and authorization)
 
-- [ ] **4.1 Create a bookmark**
+- [x] **4.1 Create a bookmark**
   - **What:** `POST /api/bookmarks` (auth required) with url, title, optional description and optional `categoryIds`.
   - **Acceptance criteria:**
     - `userId` comes from the JWT, never from the request body

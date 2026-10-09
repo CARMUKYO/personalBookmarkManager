@@ -85,7 +85,8 @@ Every Bookmark and Category belongs to exactly one User.
 
 ## Commands
 
-(Fill these in once the project is scaffolded.)
+Backend config lives in `server/.env` (git-ignored). Copy `server/.env.example` to `server/.env` and set `JWT_SECRET`
+(32+ characters; the server refuses to start without it). When adding a variable, update `.env.example` and `src/config.ts`.
 
 ```bash
 # backend

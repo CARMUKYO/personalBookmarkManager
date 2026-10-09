@@ -25,7 +25,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - The page calls `/api/health` and displays the result
   - **Depends on:** 1.1
 
-- [ ] **1.3 Environment config and git hygiene**
+- [x] **1.3 Environment config and git hygiene**
   - **What:** Add `.env` loading, `.env.example`, and a `.gitignore` covering `.env`, `node_modules` and the SQLite file. Fill in the Commands section of `AGENTS.md`.
   - **Acceptance criteria:**
     - `.env` is not tracked by git

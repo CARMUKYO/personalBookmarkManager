@@ -182,7 +182,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Routing works, and an unknown path shows a "Page not found" page
   - **Depends on:** 7.1
 
-- [ ] **7.2 Register and login pages**
+- [x] **7.2 Register and login pages**
   - **What:** Forms with client-side checks and server error messages. Redirect after success.
   - **Acceptance criteria:**
     - Wrong password shows an error message

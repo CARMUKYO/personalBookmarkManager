@@ -222,3 +222,12 @@ dialog[open] { animation: pop 140ms ease-out; }
 .simple-page .content { width: min(380px, 100%); display: grid; gap: var(--space-4); justify-items: start; }
 .simple-page h1 { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1.15; letter-spacing: -0.02em; }
 .simple-page .lede { color: var(--muted); }
+
+/* ---------- Sign in and create account ---------- */
+.simple-page.auth .content { gap: var(--space-5); justify-items: stretch; }
+.simple-page.auth .lede { margin-top: 6px; }
+.simple-page.auth form { display: grid; gap: var(--space-4); }
+.auth-switch { color: var(--muted); }
+.auth-switch a { color: var(--ink); font-weight: 600; text-underline-offset: 3px; }
+.auth-switch a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 3px; }
+.error-text a { color: inherit; font-weight: 600; text-underline-offset: 3px; }

@@ -240,6 +240,60 @@ describe("Bob cannot search into Alice's bookmarks", () => {
   });
 });
 
+describe("Bob cannot filter or sort his way into Alice's bookmarks", () => {
+  const EMPTY_PAGE = { data: [], page: 1, pageSize: 20, total: 0, totalPages: 0 };
+
+  it("filtering by Alice's category returns an empty list, the same as a nonexistent category", async () => {
+    const foreign = await send("get", `/api/bookmarks?categoryId=${aliceCategoryId}`);
+    const missing = await send("get", "/api/bookmarks?categoryId=999999");
+
+    expect(foreign.status).toBe(200);
+    expect(foreign.body).toEqual(EMPTY_PAGE);
+    expect(missing.status).toBe(200);
+    expect(missing.body).toEqual(foreign.body);
+  });
+
+  it("filtering by Alice's category plus a matching search still returns nothing", async () => {
+    const res = await send("get", `/api/bookmarks?categoryId=${aliceCategoryId}&q=alice`);
+
+    expect(res.body).toEqual(EMPTY_PAGE);
+  });
+
+  it("does not match a stray link between Bob's bookmark and Alice's category", async () => {
+    // The API refuses to create this link, but the database can't, so make it directly.
+    await prisma.bookmark.update({
+      where: { id: bobBookmarkId },
+      data: { categories: { connect: [{ id: aliceCategoryId }] } },
+    });
+
+    const res = await send("get", `/api/bookmarks?categoryId=${aliceCategoryId}`);
+
+    expect(res.body).toEqual(EMPTY_PAGE);
+  });
+
+  it("does not return Alice's bookmark when it is strayly linked to Bob's category", async () => {
+    // The mirror image of the test above: the bookmark is hers, the category is his.
+    // Only the userId on the bookmark itself keeps this out of Bob's results.
+    await prisma.bookmark.update({
+      where: { id: aliceBookmarkId },
+      data: { categories: { connect: [{ id: bobCategoryId }] } },
+    });
+
+    const res = await send("get", `/api/bookmarks?categoryId=${bobCategoryId}`);
+
+    expect(res.body.data.map((b: { id: number }) => b.id)).toEqual([bobBookmarkId]);
+    expect(res.body.total).toBe(1);
+  });
+
+  it.each(["newest", "oldest", "title"])("sort=%s only ever lists his own bookmarks", async (sort) => {
+    const res = await send("get", `/api/bookmarks?sort=${sort}&pageSize=100`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((b: { id: number }) => b.id)).toEqual([bobBookmarkId]);
+    expect(res.body.total).toBe(1);
+  });
+});
+
 describe("Bob cannot use Alice's categories", () => {
   const INVALID_CATEGORIES = {
     error: { code: "INVALID_CATEGORY_IDS", message: "One or more categories do not exist" },

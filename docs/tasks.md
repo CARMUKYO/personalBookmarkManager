@@ -156,7 +156,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - `total` reflects the filtered count
   - **Depends on:** 6.1
 
-- [ ] **6.3 Category filter and sorting**
+- [x] **6.3 Category filter and sorting**
   - **What:** Add `categoryId` and `sort` (`newest`, `oldest`, `title`).
   - **Acceptance criteria:**
     - Filtering by someone else's category returns an empty list (or 404; decide and document)
@@ -248,6 +248,8 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 4. **Tags vs categories:** I treated them as the same thing (many-to-many). Say so if you want a single category per bookmark instead; that simplifies the database.
 5. **pageSize above 100:** decided in 5.1/6.1: it is rejected with a 400 (not capped), for both categories and bookmarks.
 6. **Not included:** importing browser bookmarks, fetching page titles automatically, deployment.
+7. **Filtering and sorting (decided in 6.3):** filtering by a category that is missing or belongs to someone else returns an empty list (200), not a 404, so a stale link can never show an error and nothing is revealed.
+   `sort=title` is case-sensitive on SQLite (upper-case letters sort before lower-case: "Zebra" before "apple"). A case-insensitive sort would need a lower-case copy of the title or raw SQL.
 
 ## Why this order
 

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../generated/prisma/client.js";
+import type { Prisma, PrismaClient } from "../generated/prisma/client.js";
 import { HttpError } from "../errors.js";
 import { buildPage, skipFor, type Pagination } from "../pagination.js";
 import { assertCategoriesOwned } from "./categories.js";
@@ -95,12 +95,26 @@ export async function deleteBookmark(prisma: PrismaClient, userId: number, id: n
   if (count === 0) throw notFound();
 }
 
+export const BOOKMARK_SORTS = ["newest", "oldest", "title"] as const;
+export type BookmarkSort = (typeof BOOKMARK_SORTS)[number];
+
+// id is always the last sort key: it breaks ties between equal values (same timestamp or same title).
+// Without it the order of those rows is undefined, so they could repeat or go missing between pages.
+// "title" sorts by character code on SQLite, so upper-case letters come before lower-case ones ("Zebra" before "apple").
+const ORDER_BY = {
+  newest: [{ createdAt: "desc" }, { id: "desc" }],
+  oldest: [{ createdAt: "asc" }, { id: "asc" }],
+  title: [{ title: "asc" }, { id: "asc" }],
+} satisfies Record<BookmarkSort, Prisma.BookmarkOrderByWithRelationInput[]>;
+
 export type BookmarkListQuery = Pagination & {
   q?: string | undefined; // keyword to look for in title, url and description
+  categoryId?: number | undefined; // only bookmarks in this category
+  sort?: BookmarkSort | undefined; // defaults to "newest"
 };
 
 export async function listBookmarks(prisma: PrismaClient, userId: number, query: BookmarkListQuery) {
-  const { q } = query;
+  const { q, categoryId, sort = "newest" } = query;
 
   // userId and the search sit side by side, so BOTH must match: a keyword can never reach other users' bookmarks.
   // contains is a case-insensitive match for plain English letters on SQLite (accented letters are case-sensitive).
@@ -110,16 +124,19 @@ export async function listBookmarks(prisma: PrismaClient, userId: number, query:
     ? { OR: [{ title: { contains: q } }, { url: { contains: q } }, { description: { contains: q } }] }
     : {};
 
+  // The category must also belong to this user. The API only links bookmarks to their owner's categories,
+  // but the database can't enforce that, so this keeps a stray link from ever matching.
+  // A category that is missing or not yours simply matches nothing: the result is an empty list, not an error.
+  const inCategory = categoryId ? { categories: { some: { id: categoryId, userId } } } : {};
+
   // The same filter for the rows and the count: total must only count the matching bookmarks of this user.
-  const where = { userId, ...search };
+  const where = { userId, ...search, ...inCategory };
   const [total, bookmarks] = await Promise.all([
     prisma.bookmark.count({ where }),
     prisma.bookmark.findMany({
       where,
       select: publicBookmarkSelect,
-      // id breaks ties between equal timestamps. Without it the order of those rows is undefined,
-      // so they could repeat or go missing between pages.
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: ORDER_BY[sort],
       skip: skipFor(query),
       take: query.pageSize,
     }),

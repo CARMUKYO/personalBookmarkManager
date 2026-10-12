@@ -6,6 +6,7 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import { idParamSchema, validateBody, validateParams, validateQuery } from "../middleware/validate.js";
 import { paginationQuerySchema } from "../pagination.js";
 import {
+  BOOKMARK_SORTS,
   createBookmark,
   deleteBookmark,
   getBookmark,
@@ -56,6 +57,8 @@ const updateBookmarkSchema = z
 
 // q is the search keyword. Leading/trailing spaces are ignored, and an empty q means "no search".
 // A repeated ?q=a&q=b is not a string, so it is rejected with 400.
+// categoryId must be a positive whole number (empty, repeated or non-numeric values are 400).
+// sort must be one of the known values; leave it out for newest first.
 const listQuerySchema = paginationQuerySchema.extend({
   q: z
     .string()
@@ -63,6 +66,8 @@ const listQuerySchema = paginationQuerySchema.extend({
     .max(100)
     .transform((value) => value || undefined)
     .optional(),
+  categoryId: z.coerce.number().int().positive().optional(),
+  sort: z.enum(BOOKMARK_SORTS).default("newest"),
 });
 
 export function bookmarksRouter(

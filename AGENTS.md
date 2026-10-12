@@ -64,6 +64,8 @@ Every Bookmark and Category belongs to exactly one User.
   `{ "data": [...], "page": 1, "pageSize": 20, "total": 57, "totalPages": 3 }`
   - Query params: `page` (default 1), `pageSize` (default 20, max 100; a larger `pageSize` is rejected with 400, not capped)
   - Bookmarks also accept: `q` (search in title, url, description), `categoryId`, `sort` (`newest` | `oldest` | `title`)
+    - `sort` defaults to `newest`; any other value is rejected with 400. `categoryId` must be a positive integer (else 400).
+    - A `categoryId` that doesn't exist or belongs to someone else returns an empty list (200), not an error.
 
 ## Security rules (never break these)
 

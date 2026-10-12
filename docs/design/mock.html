@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12161E" media="(prefers-color-scheme: dark)">
+<title>Bookmark Manager design mock</title>
+<style>
+/* ---------- Fonts (self-hosted, SIL OFL 1.1) ---------- */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+/* ---------- Tokens ---------- */
+:root {
+  --paper: #F3F5F8;
+  --surface: #FFFFFF;
+  --ink: #1B2433;
+  --muted: #566174;
+  --line: #DFE3EA;
+  --field-border: #8A94A6;
+  --accent: #F5C33B;
+  --accent-hover: #EDB722;
+  --accent-ink: #1B2433;
+  --highlight: #FBE7A1;
+  --danger: #B42318;
+  --danger-ink: #FFFFFF;
+  --focus: #1B2433;
+  --scrim: rgba(18, 22, 30, 0.55);
+  --row-hover: #F8F9FB;
+
+  --tile-1-bg: #9FBFFF; --tile-1-fg: #1B2433; /* sky */
+  --tile-2-bg: #8FDDB4; --tile-2-fg: #1B2433; /* mint */
+  --tile-3-bg: #FFA9BC; --tile-3-fg: #1B2433; /* rose */
+  --tile-4-bg: #C4AFFA; --tile-4-fg: #1B2433; /* lilac */
+  --tile-5-bg: #FFB38A; --tile-5-fg: #1B2433; /* coral */
+  --tile-6-bg: #7FD6DB; --tile-6-fg: #1B2433; /* teal */
+  --tile-0-bg: #C9D0DC; --tile-0-fg: #1B2433; /* slate (fallback) */
+
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --radius-tile: 10px; --radius-control: 8px; --radius-dialog: 16px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12161E; --surface: #1A202B; --ink: #E8ECF2; --muted: #A3ADBD; --line: #2B3342;
+    --field-border: #7B8699; --accent-hover: #FFD25E; --highlight: #5A4710;
+    --danger: #FDA29B; --danger-ink: #1B2433; --focus: #F5C33B; --scrim: rgba(0, 0, 0, 0.65); --row-hover: #1E2531;
+    --tile-1-bg: #2B4D9C; --tile-1-fg: #E3ECFF; --tile-2-bg: #1F6B4B; --tile-2-fg: #E0F8EC;
+    --tile-3-bg: #99344F; --tile-3-fg: #FFE3EA; --tile-4-bg: #5B42B3; --tile-4-fg: #EFEAFF;
+    --tile-5-bg: #9A4F1E; --tile-5-fg: #FFEBDD; --tile-6-bg: #1E6A70; --tile-6-fg: #DFF7F8;
+    --tile-0-bg: #3A4458; --tile-0-fg: #E1E7F0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12161E; --surface: #1A202B; --ink: #E8ECF2; --muted: #A3ADBD; --line: #2B3342;
+  --field-border: #7B8699; --accent-hover: #FFD25E; --highlight: #5A4710;
+  --danger: #FDA29B; --danger-ink: #1B2433; --focus: #F5C33B; --scrim: rgba(0, 0, 0, 0.65); --row-hover: #1E2531;
+  --tile-1-bg: #2B4D9C; --tile-1-fg: #E3ECFF; --tile-2-bg: #1F6B4B; --tile-2-fg: #E0F8EC;
+  --tile-3-bg: #99344F; --tile-3-fg: #FFE3EA; --tile-4-bg: #5B42B3; --tile-4-fg: #EFEAFF;
+  --tile-5-bg: #9A4F1E; --tile-5-fg: #FFEBDD; --tile-6-bg: #1E6A70; --tile-6-fg: #DFF7F8;
+  --tile-0-bg: #3A4458; --tile-0-fg: #E1E7F0;
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.vh {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+button, a, input, select, textarea, label { touch-action: manipulation; }
+option { background: var(--surface); color: var(--ink); }
+h1, h2, h3 { text-wrap: balance; }
+.pager, .result-note { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 16px; top: -64px; z-index: 60; padding: 10px 16px; border-radius: var(--radius-control); background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.skip:focus { top: 12px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Mock-only chrome (not part of the design) ---------- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 8px 12px; background: #0f1319; color: #cfd6e2; font: 13px/1.2 system-ui, sans-serif;
+}
+.mockbar strong { margin-right: 6px; color: #fff; }
+.mockbar button {
+  background: #232b38; color: #e7ebf2; border: 1px solid #364055; border-radius: 6px; padding: 5px 9px; cursor: pointer; font: inherit;
+}
+.mockbar button[aria-pressed="true"] { background: #F5C33B; color: #1B2433; border-color: #F5C33B; }
+.mockbar .sep { width: 1px; height: 18px; background: #364055; margin: 0 4px; }
+
+/* The app lives in this frame so a narrow width can be previewed. */
+.frame { container-type: inline-size; flex: 1; display: flex; flex-direction: column; margin-inline: auto; width: 100%; background: var(--paper); }
+.frame > * { flex: 1; }
+.frame.narrow { width: 390px; box-shadow: 0 0 0 1px var(--line), 0 0 0 9999px rgba(0, 0, 0, 0.18); }
+
+/* ---------- Views ---------- */
+[hidden] { display: none !important; }
+.login-error { display: none; }
+body[data-view="loginerror"] .login-error { display: flex; }
+
+/* ---------- Brand ---------- */
+.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.01em; text-decoration: none; }
+.brand svg { width: 20px; height: 26px; flex: none; }
+.ribbon { fill: var(--accent); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px;
+  border: 1px solid transparent; border-radius: var(--radius-control); background: none; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface); border-color: var(--field-border); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--ink); }
+.btn-danger { background: var(--danger); color: var(--danger-ink); }
+.btn-danger:hover { filter: brightness(1.08); }
+.btn-small { min-height: 36px; }
+.btn-quiet { min-height: 36px; padding: 0 10px; color: var(--muted); font-weight: 500; }
+.btn-quiet:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.btn-quiet.is-danger:hover { color: var(--danger); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-block { width: 100%; }
+
+/* ---------- Fields ---------- */
+.field { display: grid; gap: 6px; }
+.field > label, .field > legend { font-weight: 600; font-size: 0.9375rem; }
+.hint { color: var(--muted); font-size: 0.875rem; }
+.input, .select, .textarea {
+  width: 100%; min-height: 44px; padding: 0 12px; background: var(--surface); border: 1px solid var(--field-border); border-radius: var(--radius-control);
+}
+.textarea { padding: 10px 12px; min-height: 88px; resize: vertical; line-height: 1.45; }
+.select { appearance: none; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238A94A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.input:hover, .select:hover, .textarea:hover { border-color: var(--ink); }
+.input[aria-invalid="true"] { border: 2px solid var(--danger); padding-inline: 11px; }
+.error-text { display: flex; gap: 8px; align-items: flex-start; color: var(--danger); font-size: 0.9375rem; }
+.error-text svg { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
+.field > legend { padding: 0; margin-bottom: 6px; }
+
+/* ---------- Auth screens ---------- */
+.auth { display: flex; flex-direction: column; padding: var(--space-5); }
+.auth main { flex: 1; display: grid; place-items: center; padding-block: var(--space-6); }
+.auth-form { width: min(380px, 100%); display: grid; gap: var(--space-5); }
+.auth-form h1 { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1.15; letter-spacing: -0.02em; }
+.auth-form .lede { color: var(--muted); margin-top: 6px; }
+.auth-form form { display: grid; gap: var(--space-4); }
+.auth-switch { color: var(--muted); }
+.auth-switch a { color: var(--ink); font-weight: 600; text-underline-offset: 3px; }
+.auth-switch a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 3px; }
+.alert { gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--danger); border-radius: var(--radius-control); }
+.alert p { color: var(--ink); }
+.alert svg { flex: none; width: 20px; height: 20px; margin-top: 1px; color: var(--danger); }
+
+/* ---------- App shell ---------- */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); max-width: 800px; margin-inline: auto; padding: var(--space-4) var(--space-5); }
+.topbar .who { display: flex; align-items: center; gap: var(--space-3); color: var(--muted); font-size: 0.9375rem; min-width: 0; }
+.topbar .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page { max-width: 800px; margin-inline: auto; padding: var(--space-3) var(--space-5) var(--space-7); display: grid; gap: var(--space-5); }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.page-head h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; line-height: 1.15; letter-spacing: -0.02em; }
+
+.toolbar { display: grid; grid-template-columns: 1fr 190px 160px; gap: var(--space-3); }
+.search { position: relative; }
+.search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); pointer-events: none; }
+.search .input { padding-left: 38px; }
+
+/* ---------- Bookmark list ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-dialog); overflow: hidden; }
+.result-note { padding: 12px 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 0.9375rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.bookmarks > li { display: grid; grid-template-columns: 44px 1fr auto; gap: 16px; align-items: start; padding: 16px; }
+.bookmarks > li + li { border-top: 1px solid var(--line); }
+.bookmarks > li:hover { background: var(--row-hover); }
+.tile {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-tile);
+  font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; background: var(--tile-0-bg); color: var(--tile-0-fg); user-select: none;
+}
+.tile[data-hue="1"] { background: var(--tile-1-bg); color: var(--tile-1-fg); }
+.tile[data-hue="2"] { background: var(--tile-2-bg); color: var(--tile-2-fg); }
+.tile[data-hue="3"] { background: var(--tile-3-bg); color: var(--tile-3-fg); }
+.tile[data-hue="4"] { background: var(--tile-4-bg); color: var(--tile-4-fg); }
+.tile[data-hue="5"] { background: var(--tile-5-bg); color: var(--tile-5-fg); }
+.tile[data-hue="6"] { background: var(--tile-6-bg); color: var(--tile-6-fg); }
+.row-body { min-width: 0; display: grid; gap: 2px; }
+.row-title { font-family: var(--font-display); font-weight: 650; font-size: 1.125rem; line-height: 1.3; letter-spacing: -0.005em; }
+.row-title a { text-decoration: none; overflow-wrap: anywhere; }
+.row-title a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.row-host { color: var(--muted); font-size: 0.875rem; overflow-wrap: anywhere; }
+.row-note { color: var(--muted); max-width: 65ch; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chips li { padding: 1px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--muted); font-size: 0.8125rem; line-height: 1.6; }
+.row-actions { display: flex; gap: 2px; margin: -4px -6px 0 0; }
+mark { background: var(--highlight); color: inherit; border-radius: 3px; padding: 0 1px; }
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); color: var(--muted); font-size: 0.9375rem; }
+.pager .buttons { display: flex; gap: var(--space-2); }
+
+/* ---------- Empty and no-results ---------- */
+.empty { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 56px 24px; }
+.empty .tile-stack { display: flex; margin-bottom: 4px; }
+.empty .tile-stack .tile { width: 48px; height: 48px; border: 3px solid var(--surface); margin-left: -10px; }
+.empty .tile-stack .tile:first-child { margin-left: 0; }
+.empty h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; letter-spacing: -0.01em; }
+.empty p { color: var(--muted); max-width: 42ch; }
+.empty .btn { margin-top: 8px; }
+
+/* ---------- Dialogs ---------- */
+dialog {
+  width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-dialog); box-shadow: 0 24px 60px rgba(10, 14, 22, 0.28); overflow: auto;
+}
+dialog { overscroll-behavior: contain; }
+dialog::backdrop { background: var(--scrim); }
+dialog[open] { animation: pop 140ms ease-out; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.99); } }
+.dialog-body { display: grid; gap: var(--space-4); padding: var(--space-5); }
+.dialog-body h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.dialog-body p { color: var(--muted); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4) var(--space-5); border-top: 1px solid var(--line); background: var(--paper); }
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.check label {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--field-border); border-radius: 999px; cursor: pointer; font-size: 0.9375rem; background: var(--surface);
+}
+.check label:hover { border-color: var(--ink); }
+.check input:checked + label { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.check input:checked + label::before { content: ""; width: 10px; height: 6px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg) translate(1px, -1px); }
+.check input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Narrow layouts (container query, so it also works in the 390px preview) ---------- */
+@container (max-width: 640px) {
+  .toolbar { grid-template-columns: 1fr 1fr; }
+  .toolbar .search { grid-column: 1 / -1; }
+  .bookmarks > li { grid-template-columns: 40px 1fr; gap: 12px; }
+  .tile { width: 40px; height: 40px; font-size: 1.125rem; }
+  .row-actions { grid-column: 2; margin: 4px 0 -6px -10px; }
+  .page-head .btn { padding: 0 14px; }
+  .page-head h1 { font-size: 1.5rem; }
+  .pager { flex-direction: column; align-items: stretch; text-align: center; }
+  .pager .buttons .btn { flex: 1; }
+  .dialog-actions { flex-direction: column-reverse; }
+  .dialog-actions .btn { width: 100%; }
+}
+</style>
+</head>
+<body data-view="list">
+
+<div class="mockbar" role="toolbar" aria-label="Mock controls (not part of the design)">
+  <strong>Design mock</strong>
+  <button type="button" data-set-view="login">Sign in</button>
+  <button type="button" data-set-view="loginerror">Sign in (error)</button>
+  <button type="button" data-set-view="signup">Create account</button>
+  <span class="sep"></span>
+  <button type="button" data-set-view="list">Bookmarks</button>
+  <button type="button" data-set-view="search">Search</button>
+  <button type="button" data-set-view="none">No results</button>
+  <button type="button" data-set-view="empty">Empty</button>
+  <span class="sep"></span>
+  <button type="button" data-open="add">Add dialog</button>
+  <button type="button" data-open="adderror">Add (error)</button>
+  <button type="button" data-open="delete">Delete dialog</button>
+  <span class="sep"></span>
+  <button type="button" id="toggle-theme" aria-pressed="false">Dark</button>
+  <button type="button" id="toggle-narrow" aria-pressed="false">Phone width</button>
+</div>
+
+<div class="frame" id="frame">
+
+  <!-- ===== Sign in ===== -->
+  <div class="auth" id="v-login">
+    <header><a class="brand" href="#"><svg viewBox="0 0 20 26" aria-hidden="true"><path class="ribbon" d="M0 2.5A2.5 2.5 0 0 1 2.5 0h15A2.5 2.5 0 0 1 20 2.5V26l-10-6.5L0 26z"/></svg>Bookmarks</a></header>
+    <main>
+      <div class="auth-form">
+        <div>
+          <h1>Sign in</h1>
+          <p class="lede">Pick up where you left off.</p>
+        </div>
+        <div class="alert login-error" role="alert">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><path d="M10 5.5v5.5M10 14v.2"/></svg>
+          <p>The email or password is wrong. Check them and try again.</p>
+        </div>
+        <form onsubmit="return false">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input class="input" id="login-email" name="email" type="email" autocomplete="email" spellcheck="false" value="alice@example.com" required>
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <input class="input" id="login-password" name="password" type="password" autocomplete="current-password" value="password123" required>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        </form>
+        <p class="auth-switch">New here? <a href="#" data-set-view="signup">Create an account</a></p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== Create account ===== -->
+  <div class="auth" id="v-signup">
+    <header><a class="brand" href="#"><svg viewBox="0 0 20 26" aria-hidden="true"><path class="ribbon" d="M0 2.5A2.5 2.5 0 0 1 2.5 0h15A2.5 2.5 0 0 1 20 2.5V26l-10-6.5L0 26z"/></svg>Bookmarks</a></header>
+    <main>
+      <div class="auth-form">
+        <div>
+          <h1>Create your account</h1>
+          <p class="lede">Your bookmarks are private to you.</p>
+        </div>
+        <form onsubmit="return false">
+          <div class="field">
+            <label for="su-email">Email</label>
+            <input class="input" id="su-email" name="email" type="email" autocomplete="email" spellcheck="false" required>
+          </div>
+          <div class="field">
+            <label for="su-password">Password</label>
+            <input class="input" id="su-password" name="password" type="password" autocomplete="new-password" aria-describedby="su-hint" required>
+            <p class="hint" id="su-hint">At least 8 characters.</p>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">Create account</button>
+        </form>
+        <p class="auth-switch">Already have an account? <a href="#" data-set-view="login">Sign in</a></p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== App ===== -->
+  <div id="v-app">
+    <a class="skip" href="#main">Skip to bookmarks</a>
+    <header class="topbar">
+      <a class="brand" href="#"><svg viewBox="0 0 20 26" aria-hidden="true"><path class="ribbon" d="M0 2.5A2.5 2.5 0 0 1 2.5 0h15A2.5 2.5 0 0 1 20 2.5V26l-10-6.5L0 26z"/></svg>Bookmarks</a>
+      <div class="who"><span>alice@example.com</span><button class="btn btn-secondary btn-small" type="button">Log out</button></div>
+    </header>
+
+    <main class="page" id="main">
+      <div class="page-head">
+        <h1>Your bookmarks</h1>
+        <button class="btn btn-primary" type="button" data-open="add">Add bookmark</button>
+      </div>
+
+      <form class="toolbar" role="search" onsubmit="return false">
+        <div class="search">
+          <label class="vh" for="q">Search bookmarks</label>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4 4"/></svg>
+          <input class="input" id="q" type="search" name="q" placeholder="Search title, address or note…" autocomplete="off">
+        </div>
+        <div>
+          <label class="vh" for="cat">Category</label>
+          <select class="select" id="cat" name="category"><option>All categories</option><option>Dev</option><option>News</option><option>Reading</option><option>Recipes</option></select>
+        </div>
+        <div>
+          <label class="vh" for="sort">Sort by</label>
+          <select class="select" id="sort" name="sort"><option>Newest first</option><option>Oldest first</option><option>Title A to Z</option></select>
+        </div>
+      </form>
+
+      <section aria-labelledby="results-heading" id="results"></section>
+    </main>
+  </div>
+</div>
+
+<!-- ===== Add / edit dialog ===== -->
+<dialog id="dlg-add" aria-labelledby="add-title">
+  <form method="dialog" onsubmit="return false">
+    <div class="dialog-body">
+      <h2 id="add-title">Add bookmark</h2>
+      <div class="field">
+        <label for="f-url">Address</label>
+        <input class="input" id="f-url" name="url" type="url" spellcheck="false" placeholder="https://example.com/article" aria-describedby="f-url-msg" autocomplete="off">
+        <p class="error-text" id="f-url-msg" hidden>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><path d="M10 5.5v5.5M10 14v.2"/></svg>
+          <span>Enter a full web address that starts with http:// or https://</span>
+        </p>
+      </div>
+      <div class="field">
+        <label for="f-title">Title</label>
+        <input class="input" id="f-title" name="title" type="text" maxlength="200" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="f-note">Note <span class="hint">(optional)</span></label>
+        <textarea class="textarea" id="f-note" name="note" maxlength="2000"></textarea>
+      </div>
+      <fieldset class="field">
+        <legend>Categories <span class="hint">(optional)</span></legend>
+        <div class="checks">
+          <span class="check"><input type="checkbox" id="c-dev" checked><label for="c-dev">Dev</label></span>
+          <span class="check"><input type="checkbox" id="c-news"><label for="c-news">News</label></span>
+          <span class="check"><input type="checkbox" id="c-reading" checked><label for="c-reading">Reading</label></span>
+          <span class="check"><input type="checkbox" id="c-recipes"><label for="c-recipes">Recipes</label></span>
+        </div>
+      </fieldset>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" type="button" data-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">Save bookmark</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ===== Delete confirmation ===== -->
+<dialog id="dlg-delete" aria-labelledby="del-title" aria-describedby="del-desc">
+  <div class="dialog-body">
+    <h2 id="del-title">Delete “<span id="del-name">React reference</span>”?</h2>
+    <p id="del-desc">This removes the bookmark for good. Its categories stay.</p>
+  </div>
+  <div class="dialog-actions">
+    <button class="btn btn-secondary" type="button" data-close>Keep bookmark</button>
+    <button class="btn btn-danger" type="button" data-close>Delete bookmark</button>
+  </div>
+</dialog>
+
+<script>
+/* Mock-only script: fills the list with sample data and switches screens. The real app does this in React. */
+const BOOKMARKS = [
+  { title: "React reference", host: "react.dev", note: "Official docs for hooks, components and the compiler.", cats: ["Dev", "Reading"] },
+  { title: "Roast potatoes that stay crisp", host: "seriouseats.com", note: "The par-boil and rough-up method, with oven times for fan and non-fan ovens.", cats: ["Recipes"] },
+  { title: "CSS container queries", host: "developer.mozilla.org", note: "Size a component by the space it has, not by the viewport.", cats: ["Dev"] },
+  { title: "Hacker News", host: "news.ycombinator.com", note: "", cats: ["News"] },
+  { title: "A complete guide to Flexbox", host: "css-tricks.com", note: "Still the clearest diagram of main axis versus cross axis.", cats: ["Dev", "Reading"] },
+  { title: "Atkinson Hyperlegible Next", host: "brailleinstitute.org", note: "A typeface designed so letterforms are easy to tell apart. Free to use under the SIL Open Font License.", cats: ["Reading"] },
+  { title: "The Pragmatic Engineer", host: "blog.pragmaticengineer.com", note: "Practical CSS tips for large codebases come up in the March issue.", cats: ["Reading", "News"] },
+  { title: "Three days in Lisbon", host: "lonelyplanet.com", note: "", cats: [] },
+];
+// FNV-1a: a small, well-spread string hash. The same hostname always gives the same hue (1 to 6).
+const hueFor = (host) => { let h = 2166136261; for (const c of host) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return (h % 6) + 1; };
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mark = (s, q) => !q ? esc(s) : esc(s).replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"), "<mark>$1</mark>");
+
+function rowHtml(b, q) {
+  const letter = b.host.replace(/^www\./, "")[0].toUpperCase();
+  return `<li>
+    <span class="tile" data-hue="${hueFor(b.host)}" aria-hidden="true">${letter}</span>
+    <div class="row-body">
+      <h3 class="row-title"><a href="#" target="_blank" rel="noopener noreferrer">${mark(b.title, q)}<span class="vh"> (opens in a new tab)</span></a></h3>
+      <p class="row-host">${mark(b.host, q)}</p>
+      ${b.note ? `<p class="row-note">${mark(b.note, q)}</p>` : ""}
+      ${b.cats.length ? `<ul class="chips" aria-label="Categories">${b.cats.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-quiet" type="button" data-open="add" aria-label="Edit ${esc(b.title)}">Edit</button>
+      <button class="btn btn-quiet is-danger" type="button" data-open="delete" data-name="${esc(b.title)}" aria-label="Delete ${esc(b.title)}">Delete</button>
+    </div>
+  </li>`;
+}
+
+function render(view) {
+  const el = document.getElementById("results");
+  const q = view === "search" ? "css" : view === "none" ? "kubernetes" : "";
+  if (view === "empty") {
+    el.innerHTML = `<h2 id="results-heading" class="vh">Your bookmarks</h2><div class="panel"><div class="empty">
+      <div class="tile-stack" aria-hidden="true"><span class="tile" data-hue="1">G</span><span class="tile" data-hue="3">R</span><span class="tile" data-hue="6">M</span></div>
+      <h3>No bookmarks yet</h3>
+      <p>Save a link here and you can find it later by its title, address or note.</p>
+      <button class="btn btn-primary" type="button" data-open="add">Add your first bookmark</button></div></div>`;
+    return;
+  }
+  if (view === "none") {
+    el.innerHTML = `<h2 id="results-heading" class="vh">Search results</h2><div class="panel"><div class="empty">
+      <h3>No bookmarks match “${q}”</h3>
+      <p>Check the spelling, or try a shorter word. Your category and sort choices still apply.</p>
+      <button class="btn btn-secondary" type="button">Clear search</button></div></div>`;
+    document.getElementById("q").value = q;
+    return;
+  }
+  const rows = q ? BOOKMARKS.filter((b) => `${b.title} ${b.host} ${b.note}`.toLowerCase().includes(q)) : BOOKMARKS;
+  document.getElementById("q").value = q;
+  el.innerHTML = `<h2 id="results-heading" class="vh">${q ? "Search results" : "Your bookmarks"}</h2>
+    <div class="panel">
+      ${q ? `<p class="result-note" role="status"><span>${rows.length} bookmarks match “${q}”</span><button class="btn btn-quiet" type="button">Clear search</button></p>` : ""}
+      <ul class="bookmarks">${rows.map((b) => rowHtml(b, q)).join("")}</ul>
+    </div>
+    <nav class="pager" aria-label="Pagination">
+      <p>${q ? `Showing 1 to ${rows.length} of ${rows.length}` : "Showing 1 to 8 of 57"}</p>
+      <div class="buttons"><button class="btn btn-secondary" type="button" disabled>Previous</button><button class="btn btn-secondary" type="button"${q ? " disabled" : ""}>Next</button></div>
+    </nav>`;
+}
+
+const SCREEN = { login: "v-login", loginerror: "v-login", signup: "v-signup", list: "v-app", search: "v-app", none: "v-app", empty: "v-app" };
+function setView(view) {
+  document.body.dataset.view = view;
+  for (const id of ["v-login", "v-signup", "v-app"]) document.getElementById(id).hidden = id !== SCREEN[view];
+  render(view); document.querySelectorAll("[data-set-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setView === view))); }
+function openDialog(kind, name) {
+  if (kind === "delete") { document.getElementById("del-name").textContent = name || "React reference"; document.getElementById("dlg-delete").showModal(); return; }
+  const err = kind === "adderror";
+  const url = document.getElementById("f-url");
+  url.value = err ? "example.com/article" : "";
+  if (err) url.setAttribute("aria-invalid", "true"); else url.removeAttribute("aria-invalid");
+  document.getElementById("f-url-msg").hidden = !err;
+  document.getElementById("dlg-add").showModal();
+}
+function setTheme(dark) { document.documentElement.dataset.theme = dark ? "dark" : "light"; document.getElementById("toggle-theme").setAttribute("aria-pressed", String(dark)); }
+function setNarrow(on) { document.getElementById("frame").classList.toggle("narrow", on); document.getElementById("toggle-narrow").setAttribute("aria-pressed", String(on)); }
+
+document.addEventListener("click", (e) => {
+  const view = e.target.closest("[data-set-view]"); if (view) { e.preventDefault(); setView(view.dataset.setView); return; }
+  const open = e.target.closest("[data-open]"); if (open) { if (!["list","search","none","empty"].includes(document.body.dataset.view)) setView("list"); openDialog(open.dataset.open, open.dataset.name); return; }
+  const close = e.target.closest("[data-close]"); if (close) close.closest("dialog").close();
+});
+document.getElementById("toggle-theme").addEventListener("click", () => setTheme(document.documentElement.dataset.theme !== "dark"));
+document.getElementById("toggle-narrow").addEventListener("click", () => setNarrow(!document.getElementById("frame").classList.contains("narrow")));
+
+/* Start state can be set from the address, e.g. mock.html#view=search&theme=dark&narrow&dialog=add */
+const params = new URLSearchParams(location.hash.slice(1));
+setView(params.get("view") || "list");
+if (params.get("theme")) setTheme(params.get("theme") === "dark");
+if (params.has("narrow")) setNarrow(true);
+if (params.get("dialog")) openDialog(params.get("dialog"));
+</script>
+</body>
+</html>

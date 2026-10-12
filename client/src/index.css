@@ -1,10 +1,224 @@
-body {
-  font-family: system-ui, sans-serif;
-  margin: 0;
+/* The design system from docs/design/design-plan.md. Page-specific styles are added by later tasks. */
+
+/* ---------- Fonts (self-hosted from public/fonts, SIL OFL 1.1) ---------- */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
 }
 
-main {
-  max-width: 720px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+/* ---------- Tokens ---------- */
+:root {
+  --paper: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #1b2433;
+  --muted: #566174;
+  --line: #dfe3ea;
+  --field-border: #8a94a6;
+  --accent: #f5c33b;
+  --accent-hover: #edb722;
+  --accent-ink: #1b2433;
+  --highlight: #fbe7a1;
+  --danger: #b42318;
+  --danger-ink: #ffffff;
+  --focus: #1b2433;
+  --scrim: rgba(18, 22, 30, 0.55);
+  --row-hover: #f8f9fb;
+
+  /* Monogram tiles: one pair per hue from tileFor(); 0 is the fallback. */
+  --tile-0-bg: #c9d0dc; --tile-0-fg: #1b2433; /* slate */
+  --tile-1-bg: #9fbfff; --tile-1-fg: #1b2433; /* sky */
+  --tile-2-bg: #8fddb4; --tile-2-fg: #1b2433; /* mint */
+  --tile-3-bg: #ffa9bc; --tile-3-fg: #1b2433; /* rose */
+  --tile-4-bg: #c4affa; --tile-4-fg: #1b2433; /* lilac */
+  --tile-5-bg: #ffb38a; --tile-5-fg: #1b2433; /* coral */
+  --tile-6-bg: #7fd6db; --tile-6-fg: #1b2433; /* teal */
+
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-tile: 10px;
+  --radius-control: 8px;
+  --radius-dialog: 16px;
+
+  color-scheme: light;
 }
+
+/* Dark mode follows the system setting. Only the values change; every rule below uses the variables. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #12161e;
+    --surface: #1a202b;
+    --ink: #e8ecf2;
+    --muted: #a3adbd;
+    --line: #2b3342;
+    --field-border: #7b8699;
+    --accent-hover: #ffd25e;
+    --highlight: #5a4710;
+    --danger: #fda29b;
+    --danger-ink: #1b2433;
+    --focus: #f5c33b;
+    --scrim: rgba(0, 0, 0, 0.65);
+    --row-hover: #1e2531;
+
+    --tile-0-bg: #3a4458; --tile-0-fg: #e1e7f0;
+    --tile-1-bg: #2b4d9c; --tile-1-fg: #e3ecff;
+    --tile-2-bg: #1f6b4b; --tile-2-fg: #e0f8ec;
+    --tile-3-bg: #99344f; --tile-3-fg: #ffe3ea;
+    --tile-4-bg: #5b42b3; --tile-4-fg: #efeaff;
+    --tile-5-bg: #9a4f1e; --tile-5-fg: #ffebdd;
+    --tile-6-bg: #1e6a70; --tile-6-fg: #dff7f8;
+
+    color-scheme: dark;
+  }
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+/* The React root fills the page. Layouts react to its width with container queries. */
+#root { flex: 1; display: flex; flex-direction: column; container-type: inline-size; }
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+h1, h2, h3 { text-wrap: balance; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button, a, input, select, textarea, label { touch-action: manipulation; }
+option { background: var(--surface); color: var(--ink); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+mark { background: var(--highlight); color: inherit; border-radius: 3px; padding: 0 1px; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Visually hidden, but still read by screen readers. */
+.vh {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- Brand ---------- */
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.01em; text-decoration: none;
+}
+.brand svg { width: 20px; height: 26px; flex: none; fill: var(--accent); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px;
+  border: 1px solid transparent; border-radius: var(--radius-control); background: none;
+  font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface); border-color: var(--field-border); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--ink); }
+.btn-danger { background: var(--danger); color: var(--danger-ink); }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-small { min-height: 36px; }
+.btn-quiet { min-height: 36px; padding: 0 10px; color: var(--muted); font-weight: 500; }
+.btn-quiet:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.btn-quiet.is-danger:hover { color: var(--danger); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-block { width: 100%; }
+
+/* ---------- Form fields ---------- */
+.field { display: grid; gap: 6px; }
+.field > label, .field > legend { font-weight: 600; font-size: 0.9375rem; }
+fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
+.field > legend { padding: 0; margin-bottom: 6px; }
+.hint { color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+.input, .select, .textarea {
+  width: 100%; min-height: 44px; padding: 0 12px;
+  background: var(--surface); border: 1px solid var(--field-border); border-radius: var(--radius-control);
+}
+.textarea { padding: 10px 12px; min-height: 88px; resize: vertical; line-height: 1.45; }
+.select {
+  appearance: none; padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238A94A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+.input:hover, .select:hover, .textarea:hover { border-color: var(--ink); }
+/* 2px border (and 1px less padding so the text doesn't move) marks an invalid field without relying on colour alone. */
+.input[aria-invalid='true'], .textarea[aria-invalid='true'] { border: 2px solid var(--danger); padding-inline: 11px; }
+.error-text { display: flex; gap: 8px; align-items: flex-start; color: var(--danger); font-size: 0.9375rem; }
+.error-text svg { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+
+/* A message box for errors that belong to the whole form, like a failed sign-in. */
+.alert {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--danger); border-radius: var(--radius-control);
+}
+.alert svg { flex: none; width: 20px; height: 20px; margin-top: 1px; color: var(--danger); }
+
+/* ---------- Monogram tile (letter and hue come from tileFor) ---------- */
+.tile {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-tile);
+  font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; user-select: none;
+  background: var(--tile-0-bg); color: var(--tile-0-fg);
+}
+.tile[data-hue='1'] { background: var(--tile-1-bg); color: var(--tile-1-fg); }
+.tile[data-hue='2'] { background: var(--tile-2-bg); color: var(--tile-2-fg); }
+.tile[data-hue='3'] { background: var(--tile-3-bg); color: var(--tile-3-fg); }
+.tile[data-hue='4'] { background: var(--tile-4-bg); color: var(--tile-4-fg); }
+.tile[data-hue='5'] { background: var(--tile-5-bg); color: var(--tile-5-fg); }
+.tile[data-hue='6'] { background: var(--tile-6-bg); color: var(--tile-6-fg); }
+
+/* ---------- Dialogs (native <dialog>: focus trapping and Escape for free) ---------- */
+dialog {
+  width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-dialog);
+  box-shadow: 0 24px 60px rgba(10, 14, 22, 0.28); overflow: auto; overscroll-behavior: contain;
+}
+dialog::backdrop { background: var(--scrim); }
+dialog[open] { animation: pop 140ms ease-out; }
+@keyframes pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+}
+.dialog-body { display: grid; gap: var(--space-4); padding: var(--space-5); }
+.dialog-body h2 {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.dialog-body p { color: var(--muted); }
+.dialog-actions {
+  display: flex; justify-content: flex-end; gap: var(--space-2);
+  padding: var(--space-4) var(--space-5); border-top: 1px solid var(--line); background: var(--paper);
+}
+@container (max-width: 640px) {
+  .dialog-actions { flex-direction: column-reverse; }
+  .dialog-actions .btn { width: 100%; }
+}
+
+/* ---------- Simple centred page (used by "Page not found"; sign-in pages build on it in 7.2) ---------- */
+.simple-page { flex: 1; display: flex; flex-direction: column; padding: var(--space-5); }
+.simple-page main { flex: 1; display: grid; place-items: center; padding-block: var(--space-6); }
+.simple-page .content { width: min(380px, 100%); display: grid; gap: var(--space-4); justify-items: start; }
+.simple-page h1 { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1.15; letter-spacing: -0.02em; }
+.simple-page .lede { color: var(--muted); }

@@ -173,6 +173,15 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Reloading the page keeps you logged in (via `/me`)
   - **Depends on:** 3.4, 1.2
 
+- [x] **7.2a Design foundation and routing**
+  - **What:** Turn the design in `docs/design/design-plan.md` into the app's base: CSS tokens (light and dark), self-hosted fonts,
+    base styles for buttons, fields and dialogs, the `tileFor(url)` helper, and `react-router` with an app shell.
+  - **Acceptance criteria:**
+    - The app uses the design's fonts and colours, and follows the system light/dark setting
+    - `tileFor(url)` is unit-tested (same site gives the same tile, subdomains share a tile, bad input falls back)
+    - Routing works, and an unknown path shows a "Page not found" page
+  - **Depends on:** 7.1
+
 - [ ] **7.2 Register and login pages**
   - **What:** Forms with client-side checks and server error messages. Redirect after success.
   - **Acceptance criteria:**

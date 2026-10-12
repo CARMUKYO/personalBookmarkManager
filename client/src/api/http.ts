@@ -18,6 +18,14 @@ export class ApiError extends Error {
   }
 }
 
+// Called when the server says "not logged in" (401) to a normal request, which means the session ran out
+// (or the cookie was removed) while the app was open. AuthProvider sets this so it can sign the user out.
+let onUnauthorized: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler
+}
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   body?: unknown
@@ -44,6 +52,10 @@ export async function request<T>(path: string, { method = 'GET', body }: Request
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    // /auth/* routes answer 401 as part of their normal job (wrong password, "nobody is logged in"),
+    // so only a 401 from any other route means the session ended.
+    if (res.status === 401 && !path.startsWith('/auth/')) onUnauthorized?.()
+
     // Errors look like { error: { code, message, details? } }. Fall back to safe defaults if they do not.
     const error = data?.error
     throw new ApiError(

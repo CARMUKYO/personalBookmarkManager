@@ -176,6 +176,9 @@ fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
   background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--danger); border-radius: var(--radius-control);
 }
 .alert svg { flex: none; width: 20px; height: 20px; margin-top: 1px; color: var(--danger); }
+/* A notice that isn't an error, like "your session ended". */
+.alert.is-info { border-left-color: var(--accent); }
+.alert.is-info svg { color: var(--muted); }
 
 /* ---------- Monogram tile (letter and hue come from tileFor) ---------- */
 .tile {
@@ -222,6 +225,29 @@ dialog[open] { animation: pop 140ms ease-out; }
 .simple-page .content { width: min(380px, 100%); display: grid; gap: var(--space-4); justify-items: start; }
 .simple-page h1 { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1.15; letter-spacing: -0.02em; }
 .simple-page .lede { color: var(--muted); }
+
+/* ---------- App shell (logged-in pages) ---------- */
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 60; padding: 10px 16px;
+  border-radius: var(--radius-control); background: var(--accent); color: var(--accent-ink); font-weight: 600;
+}
+.skip:focus { top: 12px; }
+.topbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4);
+  width: 100%; max-width: 800px; margin-inline: auto; padding: var(--space-4) var(--space-5);
+}
+.topbar .who { display: flex; align-items: center; gap: var(--space-3); color: var(--muted); font-size: 0.9375rem; min-width: 0; }
+.topbar .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-error { flex-basis: 100%; justify-content: flex-end; }
+.page {
+  width: 100%; max-width: 800px; margin-inline: auto; padding: var(--space-3) var(--space-5) var(--space-7);
+  display: grid; align-content: start; gap: var(--space-5);
+}
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.page-head h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; line-height: 1.15; letter-spacing: -0.02em; }
+@container (max-width: 640px) {
+  .page-head h1 { font-size: 1.5rem; }
+}
 
 /* ---------- Sign in and create account ---------- */
 .simple-page.auth .content { gap: var(--space-5); justify-items: stretch; }

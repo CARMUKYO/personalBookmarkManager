@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-import { ApiError, request } from './http'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ApiError, request, setUnauthorizedHandler } from './http'
 
 // Replaces the browser's fetch with a fake that returns the given response.
 function fakeFetch(response: Response) {
@@ -74,5 +74,38 @@ describe('request', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ status: 0, code: 'NETWORK_ERROR' })
+  })
+})
+
+describe('session ended (401) handler', () => {
+  afterEach(() => setUnauthorizedHandler(null))
+
+  const unauthorized = () => json(401, { error: { code: 'UNAUTHORIZED', message: 'Not logged in' } })
+
+  it('is called when a normal route answers 401, and the request still fails', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    fakeFetch(unauthorized())
+
+    await expect(request('/bookmarks')).rejects.toMatchObject({ status: 401 })
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('is not called for /auth routes, where 401 is a normal answer (wrong password, nobody logged in)', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    fakeFetch(unauthorized())
+
+    await expect(request('/auth/login', { method: 'POST', body: {} })).rejects.toMatchObject({ status: 401 })
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('is not called for other errors', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    fakeFetch(json(404, { error: { code: 'NOT_FOUND', message: 'Not found' } }))
+
+    await expect(request('/bookmarks/1')).rejects.toMatchObject({ status: 404 })
+    expect(handler).not.toHaveBeenCalled()
   })
 })

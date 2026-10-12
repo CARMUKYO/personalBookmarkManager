@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router'
+import { Link, Navigate, useLocation, type Location } from 'react-router'
 import { ApiError } from '../api/http'
 import { useAuth } from '../auth/useAuth'
 import { AuthLayout } from '../components/AuthLayout'
@@ -9,7 +9,8 @@ import { Field } from '../components/Field'
 type FieldErrors = { email?: string; password?: string }
 
 export function LoginPage() {
-  const { status, login } = useAuth()
+  const { status, sessionExpired, login } = useAuth()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -20,8 +21,12 @@ export function LoginPage() {
 
   // Still asking the server whether we're logged in: show nothing rather than flash the form.
   if (status === 'loading') return null
-  // Already logged in (or just logged in successfully): there's nothing to do here.
-  if (status === 'authenticated') return <Navigate to="/" replace />
+  // Already logged in (or just logged in successfully): go back to the page RequireAuth sent us here from,
+  // or to the home page if we came here directly.
+  if (status === 'authenticated') {
+    const from = (location.state as { from?: Location } | null)?.from
+    return <Navigate to={from ? from.pathname + from.search : '/'} replace />
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault() // stop the browser's own form submit, which would reload the page
@@ -58,6 +63,12 @@ export function LoginPage() {
 
   return (
     <AuthLayout title="Sign in" lede="Pick up where you left off.">
+      {sessionExpired && !formError && (
+        <div className="alert is-info" role="status">
+          <ErrorIcon />
+          <p>Your session ended, please sign in again.</p>
+        </div>
+      )}
       {formError && (
         <div className="alert" role="alert">
           <ErrorIcon />

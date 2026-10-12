@@ -73,6 +73,29 @@ describe('LoginPage', () => {
     expect(await screen.findByText('Home page')).toBeInTheDocument()
   })
 
+  it('goes back to the page the user wanted before being sent to sign in', async () => {
+    vi.mocked(authApi.login).mockResolvedValue(alice)
+    // This is the state RequireAuth leaves behind when it redirects to /login.
+    const from = { pathname: '/somewhere', search: '?q=css' }
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/login', state: { from } }]}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/somewhere" element={<p>The page I wanted</p>} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>,
+    )
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('Email'), 'alice@example.com')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByText('The page I wanted')).toBeInTheDocument()
+  })
+
   it('sends a user who is already logged in away from the login page', async () => {
     vi.mocked(authApi.getMe).mockResolvedValue(alice)
     renderAt('/login')

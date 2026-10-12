@@ -189,7 +189,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Logged-in users are redirected away from the login page
   - **Depends on:** 7.1
 
-- [ ] **7.3 Protected routes and logout**
+- [x] **7.3 Protected routes and logout**
   - **What:** Redirect unauthenticated users to login; add a logout button.
   - **Acceptance criteria:**
     - Visiting the bookmarks page logged out redirects to login

@@ -1,15 +1,18 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import * as authApi from '../api/auth'
+import { setUnauthorizedHandler } from '../api/http'
 import type { User } from '../api/types'
 import { AuthContext, type AuthStatus } from './authContext'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
+  const [sessionExpired, setSessionExpired] = useState(false)
 
   function signedIn(nextUser: User) {
     setUser(nextUser)
     setStatus('authenticated')
+    setSessionExpired(false)
   }
 
   function signedOut() {
@@ -35,6 +38,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // If any request is turned away with a 401 while we think we're logged in, the session has ended
+  // (the 7-day token expired, or the cookie was cleared). Sign out so the protected pages send us to login.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null)
+      setStatus('anonymous')
+      setSessionExpired(true)
+    })
+    return () => setUnauthorizedHandler(null)
+  }, [])
+
   async function login(email: string, password: string) {
     signedIn(await authApi.login(email, password))
   }
@@ -50,5 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signedOut()
   }
 
-  return <AuthContext.Provider value={{ user, status, login, register, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, status, sessionExpired, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }

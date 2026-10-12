@@ -147,7 +147,7 @@ describe('adding a bookmark', () => {
     const user = userEvent.setup()
 
     await user.click(await screen.findByRole('button', { name: 'Add bookmark' }))
-    expect(await screen.findByText('No categories yet.')).toBeInTheDocument()
+    expect(await screen.findByText('No categories yet. Add one below.')).toBeInTheDocument()
   })
 })
 

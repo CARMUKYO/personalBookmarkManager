@@ -235,6 +235,19 @@ dialog[open] { animation: pop 140ms ease-out; }
 }
 .check input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
 
+/* ---------- Categories: "Manage categories" dialog and the add-a-category field ---------- */
+.inline-add { display: flex; gap: var(--space-2); }
+fieldset .field { margin-top: var(--space-3); } /* "New category" under the category pills */
+.inline-add .input { flex: 1; min-width: 0; }
+.category-list { border: 1px solid var(--line); border-radius: var(--radius-control); }
+.category-list > li { display: flex; align-items: center; gap: var(--space-2); min-height: 52px; padding: 6px 8px 6px 14px; }
+.category-list > li + li { border-top: 1px solid var(--line); }
+.category-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.category-rename, .category-confirm { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.category-rename .input { flex: 1; min-width: 10ch; min-height: 40px; }
+.category-rename .error-text { flex-basis: 100%; }
+.category-confirm p { flex: 1; min-width: 14ch; color: var(--ink); }
+
 /* ---------- Simple centred page (used by "Page not found"; sign-in pages build on it in 7.2) ---------- */
 .simple-page { flex: 1; display: flex; flex-direction: column; padding: var(--space-5); }
 .simple-page main { flex: 1; display: grid; place-items: center; padding-block: var(--space-6); }
@@ -260,9 +273,14 @@ dialog[open] { animation: pop 140ms ease-out; }
   display: grid; align-content: start; gap: var(--space-5);
 }
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.page-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
 .page-head h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; line-height: 1.15; letter-spacing: -0.02em; }
 @container (max-width: 640px) {
   .page-head h1 { font-size: 1.5rem; }
+  /* Phones: heading on its own line, the two buttons side by side under it. */
+  .page-head { flex-wrap: wrap; }
+  .page-actions { width: 100%; }
+  .page-actions .btn { flex: 1; }
 }
 
 /* ---------- Toolbar: search, category, sort ---------- */

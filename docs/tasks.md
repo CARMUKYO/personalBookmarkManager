@@ -217,7 +217,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Reloading the page keeps the filters
   - **Depends on:** 6.3, 7.4
 
-- [ ] **7.7 Category management UI**
+- [x] **7.7 Category management UI**
   - **What:** Create, rename and delete categories; assign categories on the bookmark form.
   - **Acceptance criteria:**
     - Duplicate-name errors are shown clearly

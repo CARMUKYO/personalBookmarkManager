@@ -5,13 +5,19 @@ import { listCategories } from '../api/categories'
 import type { Bookmark, Category, Page } from '../api/types'
 import { BookmarkDialog } from '../components/BookmarkDialog'
 import { BookmarkRow } from '../components/BookmarkRow'
+import { CategoriesDialog } from '../components/CategoriesDialog'
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog'
 import { Pager } from '../components/Pager'
 import { Toolbar } from '../components/Toolbar'
 import { readFilters, withFilters, withPage, type FilterChanges } from './bookmarkFilters'
 
 // Which dialog is open, if any. Only one can be open at a time.
-type OpenDialog = { kind: 'add' } | { kind: 'edit'; bookmark: Bookmark } | { kind: 'delete'; bookmark: Bookmark } | null
+type OpenDialog =
+  | { kind: 'add' }
+  | { kind: 'edit'; bookmark: Bookmark }
+  | { kind: 'delete'; bookmark: Bookmark }
+  | { kind: 'categories' }
+  | null
 
 export function BookmarksPage() {
   // Page, search, category and sort live in the address bar, so Back, reload and shared links all keep them.
@@ -19,7 +25,11 @@ export function BookmarksPage() {
   const { page, q, categoryId, sort } = readFilters(searchParams)
   const filtering = q !== '' || categoryId !== undefined // sort doesn't hide anything, so it doesn't count
 
-  const [categories, setCategories] = useState<Category[]>([]) // for the filter dropdown and messages
+  // The user's categories, loaded once here and shared by the filter dropdown, the bookmark form and
+  // "Manage categories", so they always agree. Bumping categoriesVersion loads them again after a change.
+  const [categories, setCategories] = useState<Category[] | null>(null) // null until the first load
+  const [categoriesFailed, setCategoriesFailed] = useState(false)
+  const [categoriesVersion, setCategoriesVersion] = useState(0)
 
   // Bumped to load the list again: by "Try again", and after every add, edit and delete.
   const [reloadCount, setReloadCount] = useState(0)
@@ -56,14 +66,18 @@ export function BookmarksPage() {
     let ignore = false
     listCategories()
       .then((list) => {
-        if (!ignore) setCategories(list)
+        if (ignore) return
+        setCategories(list)
+        setCategoriesFailed(false)
       })
       // Without categories the dropdown only offers "All categories"; the list itself still works.
-      .catch(() => {})
+      .catch(() => {
+        if (!ignore) setCategoriesFailed(true)
+      })
     return () => {
       ignore = true
     }
-  }, [])
+  }, [categoriesVersion])
 
   const result = loaded?.result ?? null
   const error = failed?.key === requestKey ? failed.message : null
@@ -93,7 +107,20 @@ export function BookmarksPage() {
     return `?${withFilters(searchParams, { categoryId: id })}`
   }
 
-  const categoryName = categories.find((category) => category.id === categoryId)?.name ?? 'this category'
+  // After a category is added or renamed: reload the categories, and the list too (its chips show the names).
+  function handleCategoriesChanged() {
+    setCategoriesVersion((n) => n + 1)
+    setReloadCount((n) => n + 1)
+  }
+
+  function handleCategoryDeleted(id: number) {
+    handleCategoriesChanged()
+    setAnnouncement('Category deleted')
+    // If the list was filtered by it, that filter now means nothing: show all bookmarks instead.
+    if (id === categoryId) changeFilters({ categoryId: undefined })
+  }
+
+  const categoryName = (categories ?? []).find((category) => category.id === categoryId)?.name ?? 'this category'
 
   function handleSaved() {
     const added = dialog?.kind === 'add'
@@ -228,13 +255,25 @@ export function BookmarksPage() {
         <h1 ref={headingRef} tabIndex={-1}>
           Your bookmarks
         </h1>
-        <button className="btn btn-primary" type="button" onClick={() => setDialog({ kind: 'add' })}>
-          Add bookmark
-        </button>
+        <div className="page-actions">
+          {/* Here rather than in the toolbar: a new user, who has no toolbar yet, can still set up categories. */}
+          <button className="btn btn-secondary" type="button" onClick={() => setDialog({ kind: 'categories' })}>
+            Manage categories
+          </button>
+          <button className="btn btn-primary" type="button" onClick={() => setDialog({ kind: 'add' })}>
+            Add bookmark
+          </button>
+        </div>
       </div>
       {/* Hidden for a brand-new user: there's nothing to search yet. Shown while filters are on, so they can be undone. */}
       {(filtering || !result || result.total > 0) && (
-        <Toolbar q={q} categoryId={categoryId} sort={sort} categories={categories} onChange={changeFilters} />
+        <Toolbar
+          q={q}
+          categoryId={categoryId}
+          sort={sort}
+          categories={categories ?? []}
+          onChange={changeFilters}
+        />
       )}
       <section className="results" aria-labelledby="results-heading">
         <h2 id="results-heading" className="vh">
@@ -246,14 +285,24 @@ export function BookmarksPage() {
         {announcement}
       </p>
 
-      {dialog?.kind === 'add' && <BookmarkDialog onClose={() => setDialog(null)} onSaved={handleSaved} />}
-      {dialog?.kind === 'edit' && (
-        // key: a different bookmark gets a fresh form instead of reusing the last one's typed values.
+      {(dialog?.kind === 'add' || dialog?.kind === 'edit') && (
         <BookmarkDialog
-          key={dialog.bookmark.id}
-          bookmark={dialog.bookmark}
+          // key: a different bookmark gets a fresh form instead of reusing the last one's typed values.
+          key={dialog.kind === 'edit' ? dialog.bookmark.id : 'new'}
+          bookmark={dialog.kind === 'edit' ? dialog.bookmark : undefined}
+          categories={categories}
+          categoriesFailed={categoriesFailed}
+          onCategoryCreated={() => setCategoriesVersion((n) => n + 1)}
           onClose={() => setDialog(null)}
           onSaved={handleSaved}
+        />
+      )}
+      {dialog?.kind === 'categories' && (
+        <CategoriesDialog
+          categories={categories}
+          onClose={() => setDialog(null)}
+          onChanged={handleCategoriesChanged}
+          onDeleted={handleCategoryDeleted}
         />
       )}
       {dialog?.kind === 'delete' && (

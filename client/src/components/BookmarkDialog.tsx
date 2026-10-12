@@ -1,14 +1,17 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
 import { createBookmark, updateBookmark } from '../api/bookmarks'
-import { listCategories } from '../api/categories'
 import { ApiError } from '../api/http'
 import type { Bookmark, Category } from '../api/types'
 import { ErrorIcon } from './ErrorIcon'
 import { Field } from './Field'
 import { Modal } from './Modal'
+import { NewCategoryField } from './NewCategoryField'
 
 type BookmarkDialogProps = {
   bookmark?: Bookmark // given: edit this bookmark. Left out: add a new one.
+  categories: Category[] | null // the user's categories; null while they load
+  categoriesFailed: boolean
+  onCategoryCreated: () => void // a category was added from this form; the page reloads the list
   onClose: () => void // closed without saving
   onSaved: (bookmark: Bookmark) => void
 }
@@ -31,7 +34,14 @@ function sameIds(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((id) => b.includes(id))
 }
 
-export function BookmarkDialog({ bookmark, onClose, onSaved }: BookmarkDialogProps) {
+export function BookmarkDialog({
+  bookmark,
+  categories,
+  categoriesFailed,
+  onCategoryCreated,
+  onClose,
+  onSaved,
+}: BookmarkDialogProps) {
   const isEdit = bookmark !== undefined
   const initial = {
     url: bookmark?.url ?? '',
@@ -48,26 +58,9 @@ export function BookmarkDialog({ bookmark, onClose, onSaved }: BookmarkDialogPro
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const [categories, setCategories] = useState<Category[] | null>(null) // null while loading
-  const [categoriesError, setCategoriesError] = useState(false)
-
   const urlRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const id = useId()
-
-  useEffect(() => {
-    let ignore = false
-    listCategories()
-      .then((list) => {
-        if (!ignore) setCategories(list)
-      })
-      .catch(() => {
-        if (!ignore) setCategoriesError(true)
-      })
-    return () => {
-      ignore = true
-    }
-  }, [])
 
   const isDirty =
     url !== initial.url ||
@@ -85,6 +78,12 @@ export function BookmarkDialog({ bookmark, onClose, onSaved }: BookmarkDialogPro
     setCategoryIds((current) =>
       current.includes(categoryId) ? current.filter((id) => id !== categoryId) : [...current, categoryId],
     )
+  }
+
+  // A category made right here is ticked straight away: that's why it was made.
+  function handleCategoryCreated(category: Category) {
+    setCategoryIds((current) => [...current, category.id])
+    onCategoryCreated()
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -198,12 +197,12 @@ export function BookmarkDialog({ bookmark, onClose, onSaved }: BookmarkDialogPro
             <legend>
               Categories <span className="hint">(optional)</span>
             </legend>
-            {categoriesError ? (
+            {categoriesFailed ? (
               <p className="hint">Couldn't load your categories. You can still save the bookmark without them.</p>
             ) : categories === null ? (
               <p className="hint">Loading categories…</p>
             ) : categories.length === 0 ? (
-              <p className="hint">No categories yet.</p>
+              <p className="hint">No categories yet. Add one below.</p>
             ) : (
               <div className="checks">
                 {categories.map((category) => (
@@ -219,6 +218,7 @@ export function BookmarkDialog({ bookmark, onClose, onSaved }: BookmarkDialogPro
                 ))}
               </div>
             )}
+            <NewCategoryField label="New category" onCreated={handleCategoryCreated} />
           </fieldset>
         </div>
         <div className="dialog-actions">

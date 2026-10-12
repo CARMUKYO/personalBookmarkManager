@@ -59,6 +59,9 @@ npm install
 - `npm install` also generates the Prisma database client, through the `postinstall` script.
 - Newer npm versions may print an `install-scripts ... not yet covered by allowScripts` warning for packages like
   `prisma` and `better-sqlite3`. It's only a warning; the install still works.
+- npm may also report "4 high severity vulnerabilities" and suggest `npm audit fix --force`. **Don't run it**: the
+  warnings are in the Prisma command-line tool's own dependencies (not code the app runs), and `--force` would
+  downgrade Prisma to version 6 and break the project.
 
 Create your local config file from the example:
 
@@ -81,8 +84,10 @@ Create the database. This makes `server/dev.db` and applies all migrations:
 npm run db:migrate
 ```
 
-Optional: add two demo users with the seed script. It deletes and recreates just these two users, each time it
-runs.
+Prisma may print an "Update available … major update" box. Ignore it; the project is built for Prisma 7.
+
+Optional: add two demo users with sample data (Alice gets 4 categories and 50 bookmarks, Bob 2 categories and
+5 bookmarks). Each run deletes and recreates just these two users and their data; nothing else is touched.
 
 ```bash
 npm run db:seed

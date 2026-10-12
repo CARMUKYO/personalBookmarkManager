@@ -241,7 +241,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Findings listed and each one fixed or consciously skipped
   - **Depends on:** all above
 
-- [ ] **8.3 README and final check**
+- [x] **8.3 README and final check**
   - **What:** Write a README with setup steps, then follow it from a fresh clone.
   - **Acceptance criteria:**
     - A fresh clone runs following only the README

@@ -3,11 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { listBookmarks } from '../api/bookmarks'
+import { listCategories } from '../api/categories'
 import { ApiError } from '../api/http'
 import type { Bookmark, Page } from '../api/types'
 import { BookmarksPage } from './BookmarksPage'
 
 vi.mock('../api/bookmarks')
+vi.mock('../api/categories')
 
 function makeBookmark(id: number, overrides: Partial<Bookmark> = {}): Bookmark {
   return {
@@ -51,6 +53,7 @@ function renderAt(path: string) {
 
 beforeEach(() => {
   vi.resetAllMocks()
+  vi.mocked(listCategories).mockResolvedValue([])
 })
 
 describe('BookmarksPage', () => {
@@ -116,7 +119,7 @@ describe('BookmarksPage', () => {
     renderAt('/?page=2')
 
     expect(await screen.findByText('Bookmark 3')).toBeInTheDocument()
-    expect(listBookmarks).toHaveBeenCalledWith({ page: 2 })
+    expect(listBookmarks).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }))
   })
 
   it('moves to the last real page when the address points past the end', async () => {

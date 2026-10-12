@@ -1,32 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { listBookmarks } from '../api/bookmarks'
-import type { Bookmark, Page } from '../api/types'
+import { listCategories } from '../api/categories'
+import type { Bookmark, Category, Page } from '../api/types'
 import { BookmarkDialog } from '../components/BookmarkDialog'
 import { BookmarkRow } from '../components/BookmarkRow'
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog'
 import { Pager } from '../components/Pager'
-
-// ?page=2 -> 2. Anything missing or invalid (?page=abc, ?page=0) means the first page.
-function pageFromUrl(value: string | null): number {
-  const page = Number(value)
-  return Number.isInteger(page) && page >= 1 ? page : 1
-}
+import { Toolbar } from '../components/Toolbar'
+import { readFilters, withFilters, withPage, type FilterChanges } from './bookmarkFilters'
 
 // Which dialog is open, if any. Only one can be open at a time.
 type OpenDialog = { kind: 'add' } | { kind: 'edit'; bookmark: Bookmark } | { kind: 'delete'; bookmark: Bookmark } | null
 
 export function BookmarksPage() {
-  // The page number lives in the address bar, so Back, reload and shared links all keep it.
+  // Page, search, category and sort live in the address bar, so Back, reload and shared links all keep them.
   const [searchParams, setSearchParams] = useSearchParams()
-  const page = pageFromUrl(searchParams.get('page'))
+  const { page, q, categoryId, sort } = readFilters(searchParams)
+  const filtering = q !== '' || categoryId !== undefined // sort doesn't hide anything, so it doesn't count
+
+  const [categories, setCategories] = useState<Category[]>([]) // for the filter dropdown and messages
 
   // Bumped to load the list again: by "Try again", and after every add, edit and delete.
   const [reloadCount, setReloadCount] = useState(0)
 
   // Each answer remembers which request it belongs to. Whether we're loading, or whether an error is current,
   // is then worked out below instead of being stored, so it can never get out of step.
-  const requestKey = `${page}/${reloadCount}`
+  const requestKey = JSON.stringify([page, q, categoryId, sort, reloadCount])
   const [loaded, setLoaded] = useState<{ key: string; result: Page<Bookmark> } | null>(null) // last page that loaded
   const [failed, setFailed] = useState<{ key: string; message: string } | null>(null)
 
@@ -40,7 +40,7 @@ export function BookmarksPage() {
 
   useEffect(() => {
     let ignore = false // set on cleanup, so the answer for an old page can't overwrite a newer one
-    listBookmarks({ page })
+    listBookmarks({ page, q: q || undefined, categoryId, sort })
       .then((result) => {
         if (!ignore) setLoaded({ key: requestKey, result })
       })
@@ -50,7 +50,20 @@ export function BookmarksPage() {
     return () => {
       ignore = true
     }
-  }, [page, requestKey])
+  }, [page, q, categoryId, sort, requestKey])
+
+  useEffect(() => {
+    let ignore = false
+    listCategories()
+      .then((list) => {
+        if (!ignore) setCategories(list)
+      })
+      // Without categories the dropdown only offers "All categories"; the list itself still works.
+      .catch(() => {})
+    return () => {
+      ignore = true
+    }
+  }, [])
 
   const result = loaded?.result ?? null
   const error = failed?.key === requestKey ? failed.message : null
@@ -68,14 +81,19 @@ export function BookmarksPage() {
   }, [loading, pastTheEnd])
 
   function goToPage(nextPage: number) {
-    // Copy the current query so other values (search and filters, from task 7.6) are kept.
-    setSearchParams((current) => {
-      const next = new URLSearchParams(current)
-      if (nextPage === 1) next.delete('page')
-      else next.set('page', String(nextPage))
-      return next
-    })
+    setSearchParams((current) => withPage(current, nextPage))
   }
+
+  function changeFilters(changes: FilterChanges, options?: { replace?: boolean }) {
+    setSearchParams((current) => withFilters(current, changes), { replace: options?.replace })
+  }
+
+  // A chip's link: the current list, filtered by that category instead.
+  function categoryHref(id: number) {
+    return `?${withFilters(searchParams, { categoryId: id })}`
+  }
+
+  const categoryName = categories.find((category) => category.id === categoryId)?.name ?? 'this category'
 
   function handleSaved() {
     const added = dialog?.kind === 'add'
@@ -95,7 +113,7 @@ export function BookmarksPage() {
 
   // A page past the end (an old link, or the last bookmark on the last page was deleted): go to the real last page.
   if (pastTheEnd) {
-    return <Navigate to={`?page=${result.totalPages}`} replace />
+    return <Navigate to={`?${withPage(searchParams, result.totalPages)}`} replace />
   }
 
   let content
@@ -120,6 +138,33 @@ export function BookmarksPage() {
         </p>
       </div>
     )
+  } else if (result.total === 0 && filtering) {
+    // Nothing matches the search or category. Say what was searched, and offer a way back.
+    content = (
+      <div className="panel">
+        <div className="empty">
+          {q ? (
+            <>
+              <h3>No bookmarks match “{q}”</h3>
+              <p>
+                {categoryId ? `Only “${categoryName}” was searched. ` : ''}Check the spelling, or try a shorter word.
+              </p>
+              <button className="btn btn-secondary" type="button" onClick={() => changeFilters({ q: '' })}>
+                Clear search
+              </button>
+            </>
+          ) : (
+            <>
+              <h3>No bookmarks in “{categoryName}”</h3>
+              <p>Add this category to a bookmark when you add or edit it.</p>
+              <button className="btn btn-secondary" type="button" onClick={() => changeFilters({ categoryId: undefined })}>
+                Show all bookmarks
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )
   } else if (result.total === 0) {
     content = (
       <div className="panel">
@@ -141,6 +186,16 @@ export function BookmarksPage() {
     content = (
       <>
         <div className="panel">
+          {q && (
+            <div className="result-note">
+              <p>
+                {result.total} {result.total === 1 ? 'bookmark matches' : 'bookmarks match'} “{q}”
+              </p>
+              <button className="btn btn-quiet" type="button" onClick={() => changeFilters({ q: '' })}>
+                Clear search
+              </button>
+            </div>
+          )}
           <ul className="bookmarks" aria-busy={loading} ref={listRef}>
             {result.data.map((bookmark) => (
               <BookmarkRow
@@ -148,6 +203,7 @@ export function BookmarksPage() {
                 bookmark={bookmark}
                 onEdit={(b) => setDialog({ kind: 'edit', bookmark: b })}
                 onDelete={(b) => setDialog({ kind: 'delete', bookmark: b })}
+                categoryHref={categoryHref}
               />
             ))}
           </ul>
@@ -176,9 +232,13 @@ export function BookmarksPage() {
           Add bookmark
         </button>
       </div>
+      {/* Hidden for a brand-new user: there's nothing to search yet. Shown while filters are on, so they can be undone. */}
+      {(filtering || !result || result.total > 0) && (
+        <Toolbar q={q} categoryId={categoryId} sort={sort} categories={categories} onChange={changeFilters} />
+      )}
       <section className="results" aria-labelledby="results-heading">
         <h2 id="results-heading" className="vh">
-          Bookmark list
+          {filtering ? 'Search results' : 'Bookmark list'}
         </h2>
         {content}
       </section>

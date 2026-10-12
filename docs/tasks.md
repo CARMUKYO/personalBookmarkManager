@@ -210,7 +210,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Server validation errors are shown next to the form
   - **Depends on:** 4.2, 4.3, 7.4
 
-- [ ] **7.6 Search box, category filter and sort**
+- [x] **7.6 Search box, category filter and sort**
   - **What:** Controls above the list. Search is debounced; filter state is kept in the URL query string.
   - **Acceptance criteria:**
     - Changing search or filter resets to page 1

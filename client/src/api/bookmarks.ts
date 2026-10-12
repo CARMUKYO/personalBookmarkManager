@@ -1,17 +1,24 @@
 import { request } from './http'
 import type { Bookmark, Page } from './types'
 
-// Search, category and sort are added in task 7.6.
+export type BookmarkSort = 'newest' | 'oldest' | 'title'
+
 export type ListBookmarksParams = {
   page?: number
   pageSize?: number
+  q?: string // search text, matched in title, address and note
+  categoryId?: number
+  sort?: BookmarkSort // the server's default is 'newest'
 }
 
 export function listBookmarks(params: ListBookmarksParams = {}): Promise<Page<Bookmark>> {
-  // URLSearchParams builds "page=2&pageSize=20" and escapes the values for us.
+  // URLSearchParams builds "page=2&q=css" and escapes the values for us (a search for "a&b" stays one value).
   const query = new URLSearchParams()
   if (params.page) query.set('page', String(params.page))
   if (params.pageSize) query.set('pageSize', String(params.pageSize))
+  if (params.q) query.set('q', params.q)
+  if (params.categoryId) query.set('categoryId', String(params.categoryId))
+  if (params.sort && params.sort !== 'newest') query.set('sort', params.sort)
   const queryString = query.toString()
   return request<Page<Bookmark>>(queryString ? `/bookmarks?${queryString}` : '/bookmarks')
 }

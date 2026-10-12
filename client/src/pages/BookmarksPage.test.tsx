@@ -83,7 +83,7 @@ describe('BookmarksPage', () => {
   it('shows a loading message first', async () => {
     fakeList(1)
     renderAt('/')
-    expect(screen.getByRole('status')).toHaveTextContent('Loading bookmarks…')
+    expect(screen.getByText('Loading bookmarks…')).toBeInTheDocument()
     await screen.findByText('Bookmark 1')
   })
 

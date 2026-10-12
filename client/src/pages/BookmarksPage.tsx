@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { listBookmarks } from '../api/bookmarks'
 import type { Bookmark, Page } from '../api/types'
+import { BookmarkDialog } from '../components/BookmarkDialog'
 import { BookmarkRow } from '../components/BookmarkRow'
+import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog'
 import { Pager } from '../components/Pager'
 
 // ?page=2 -> 2. Anything missing or invalid (?page=abc, ?page=0) means the first page.
@@ -11,18 +13,30 @@ function pageFromUrl(value: string | null): number {
   return Number.isInteger(page) && page >= 1 ? page : 1
 }
 
+// Which dialog is open, if any. Only one can be open at a time.
+type OpenDialog = { kind: 'add' } | { kind: 'edit'; bookmark: Bookmark } | { kind: 'delete'; bookmark: Bookmark } | null
+
 export function BookmarksPage() {
   // The page number lives in the address bar, so Back, reload and shared links all keep it.
   const [searchParams, setSearchParams] = useSearchParams()
   const page = pageFromUrl(searchParams.get('page'))
 
-  const [reloadCount, setReloadCount] = useState(0) // "Try again" bumps this to run the effect again
+  // Bumped to load the list again: by "Try again", and after every add, edit and delete.
+  const [reloadCount, setReloadCount] = useState(0)
 
   // Each answer remembers which request it belongs to. Whether we're loading, or whether an error is current,
   // is then worked out below instead of being stored, so it can never get out of step.
   const requestKey = `${page}/${reloadCount}`
   const [loaded, setLoaded] = useState<{ key: string; result: Page<Bookmark> } | null>(null) // last page that loaded
   const [failed, setFailed] = useState<{ key: string; message: string } | null>(null)
+
+  const [dialog, setDialog] = useState<OpenDialog>(null)
+  const [announcement, setAnnouncement] = useState('') // read out by screen readers, e.g. "Bookmark deleted"
+
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+  // After a delete: the position of the deleted row, so focus can move to the row that takes its place.
+  const focusRowAfterLoad = useRef<number | null>(null)
 
   useEffect(() => {
     let ignore = false // set on cleanup, so the answer for an old page can't overwrite a newer one
@@ -41,6 +55,17 @@ export function BookmarksPage() {
   const result = loaded?.result ?? null
   const error = failed?.key === requestKey ? failed.message : null
   const loading = loaded?.key !== requestKey && !error
+  const pastTheEnd = !loading && result !== null && result.data.length === 0 && result.total > 0
+
+  // The deleted row's button is gone, so keyboard focus would fall back to the top of the page.
+  // Once the list has reloaded, put focus on the row that took its place (or the last row, or the heading).
+  useEffect(() => {
+    if (focusRowAfterLoad.current === null || loading || pastTheEnd) return
+    const links = listRef.current?.querySelectorAll<HTMLAnchorElement>('.row-title a') ?? []
+    if (links.length > 0) links[Math.min(focusRowAfterLoad.current, links.length - 1)].focus()
+    else headingRef.current?.focus()
+    focusRowAfterLoad.current = null
+  }, [loading, pastTheEnd])
 
   function goToPage(nextPage: number) {
     // Copy the current query so other values (search and filters, from task 7.6) are kept.
@@ -52,8 +77,24 @@ export function BookmarksPage() {
     })
   }
 
+  function handleSaved() {
+    const added = dialog?.kind === 'add'
+    setDialog(null)
+    setAnnouncement(added ? 'Bookmark added' : 'Changes saved')
+    // The list is newest first, so a new bookmark is at the top of page 1: go there to show it.
+    if (added) goToPage(1)
+    setReloadCount((n) => n + 1)
+  }
+
+  function handleDeleted(bookmark: Bookmark) {
+    focusRowAfterLoad.current = Math.max(0, result?.data.findIndex((b) => b.id === bookmark.id) ?? 0)
+    setDialog(null)
+    setAnnouncement('Bookmark deleted')
+    setReloadCount((n) => n + 1)
+  }
+
   // A page past the end (an old link, or the last bookmark on the last page was deleted): go to the real last page.
-  if (!loading && result && result.data.length === 0 && result.total > 0) {
+  if (pastTheEnd) {
     return <Navigate to={`?page=${result.totalPages}`} replace />
   }
 
@@ -90,6 +131,9 @@ export function BookmarksPage() {
           </div>
           <h3>No bookmarks yet</h3>
           <p>Save a link here and you can find it later by its title, address or note.</p>
+          <button className="btn btn-primary" type="button" onClick={() => setDialog({ kind: 'add' })}>
+            Add your first bookmark
+          </button>
         </div>
       </div>
     )
@@ -97,9 +141,14 @@ export function BookmarksPage() {
     content = (
       <>
         <div className="panel">
-          <ul className="bookmarks" aria-busy={loading}>
+          <ul className="bookmarks" aria-busy={loading} ref={listRef}>
             {result.data.map((bookmark) => (
-              <BookmarkRow key={bookmark.id} bookmark={bookmark} />
+              <BookmarkRow
+                key={bookmark.id}
+                bookmark={bookmark}
+                onEdit={(b) => setDialog({ kind: 'edit', bookmark: b })}
+                onDelete={(b) => setDialog({ kind: 'delete', bookmark: b })}
+              />
             ))}
           </ul>
         </div>
@@ -119,7 +168,13 @@ export function BookmarksPage() {
   return (
     <>
       <div className="page-head">
-        <h1>Your bookmarks</h1>
+        {/* tabIndex -1: not in the Tab order, but focus can be moved here from code (after deleting the last row). */}
+        <h1 ref={headingRef} tabIndex={-1}>
+          Your bookmarks
+        </h1>
+        <button className="btn btn-primary" type="button" onClick={() => setDialog({ kind: 'add' })}>
+          Add bookmark
+        </button>
       </div>
       <section className="results" aria-labelledby="results-heading">
         <h2 id="results-heading" className="vh">
@@ -127,6 +182,27 @@ export function BookmarksPage() {
         </h2>
         {content}
       </section>
+      <p className="vh" role="status">
+        {announcement}
+      </p>
+
+      {dialog?.kind === 'add' && <BookmarkDialog onClose={() => setDialog(null)} onSaved={handleSaved} />}
+      {dialog?.kind === 'edit' && (
+        // key: a different bookmark gets a fresh form instead of reusing the last one's typed values.
+        <BookmarkDialog
+          key={dialog.bookmark.id}
+          bookmark={dialog.bookmark}
+          onClose={() => setDialog(null)}
+          onSaved={handleSaved}
+        />
+      )}
+      {dialog?.kind === 'delete' && (
+        <ConfirmDeleteDialog
+          bookmark={dialog.bookmark}
+          onClose={() => setDialog(null)}
+          onDeleted={() => handleDeleted(dialog.bookmark)}
+        />
+      )}
     </>
   )
 }

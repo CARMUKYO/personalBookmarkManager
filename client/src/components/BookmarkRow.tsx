@@ -2,9 +2,14 @@ import type { Bookmark } from '../api/types'
 import { displayHost, savedLabel } from '../ui/format'
 import { tileFor } from '../ui/tile'
 
-// One bookmark in the list: tile, title link, hostname and date, note, categories.
-// Edit and Delete buttons are added in task 7.5.
-export function BookmarkRow({ bookmark }: { bookmark: Bookmark }) {
+type BookmarkRowProps = {
+  bookmark: Bookmark
+  onEdit: (bookmark: Bookmark) => void
+  onDelete: (bookmark: Bookmark) => void
+}
+
+// One bookmark in the list: tile, title link, hostname and date, note, categories, then Edit and Delete.
+export function BookmarkRow({ bookmark, onEdit, onDelete }: BookmarkRowProps) {
   const tile = tileFor(bookmark.url)
 
   return (
@@ -32,6 +37,20 @@ export function BookmarkRow({ bookmark }: { bookmark: Bookmark }) {
             ))}
           </ul>
         )}
+      </div>
+      <div className="row-actions">
+        {/* Every row has an "Edit" button, so the label adds the title: screen reader users hear "Edit React reference". */}
+        <button className="btn btn-quiet" type="button" aria-label={`Edit ${bookmark.title}`} onClick={() => onEdit(bookmark)}>
+          Edit
+        </button>
+        <button
+          className="btn btn-quiet is-danger"
+          type="button"
+          aria-label={`Delete ${bookmark.title}`}
+          onClick={() => onDelete(bookmark)}
+        >
+          Delete
+        </button>
       </div>
     </li>
   )

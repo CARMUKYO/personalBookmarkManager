@@ -203,7 +203,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - An empty-state message appears for a new user
   - **Depends on:** 6.1, 7.3
 
-- [ ] **7.5 Add, edit and delete bookmarks**
+- [x] **7.5 Add, edit and delete bookmarks**
   - **What:** A form to add/edit and a delete button with confirmation.
   - **Acceptance criteria:**
     - The list refreshes after each change

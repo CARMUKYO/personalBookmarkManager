@@ -219,6 +219,22 @@ dialog[open] { animation: pop 140ms ease-out; }
   .dialog-actions .btn { width: 100%; }
 }
 
+/* Category pills in the bookmark form: real checkboxes, styled as pills. The box itself is hidden but still focusable. */
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.check label {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--field-border); border-radius: 999px; background: var(--surface); cursor: pointer; font-size: 0.9375rem;
+}
+.check label:hover { border-color: var(--ink); }
+.check input:checked + label { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+/* A tick drawn with two borders, so "selected" isn't shown by colour alone. */
+.check input:checked + label::before {
+  content: ''; width: 10px; height: 6px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+.check input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 /* ---------- Simple centred page (used by "Page not found"; sign-in pages build on it in 7.2) ---------- */
 .simple-page { flex: 1; display: flex; flex-direction: column; padding: var(--space-5); }
 .simple-page main { flex: 1; display: grid; place-items: center; padding-block: var(--space-6); }
@@ -253,7 +269,7 @@ dialog[open] { animation: pop 140ms ease-out; }
 .results { display: grid; gap: var(--space-5); }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-dialog); overflow: hidden; }
 .panel-message { padding: var(--space-6) var(--space-5); color: var(--muted); text-align: center; }
-.bookmarks > li { display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; padding: 16px; }
+.bookmarks > li { display: grid; grid-template-columns: 44px 1fr auto; gap: 16px; align-items: start; padding: 16px; }
 .bookmarks > li + li { border-top: 1px solid var(--line); }
 .bookmarks > li:hover { background: var(--row-hover); }
 /* While the next page loads, the old rows stay but look inactive. */
@@ -270,6 +286,7 @@ dialog[open] { animation: pop 140ms ease-out; }
   color: var(--muted); max-width: 65ch; margin-top: 4px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
+.row-actions { display: flex; gap: 2px; margin: -4px -6px 0 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chips li {
   padding: 1px 10px; border: 1px solid var(--line); border-radius: 999px;
@@ -291,6 +308,9 @@ dialog[open] { animation: pop 140ms ease-out; }
 @container (max-width: 640px) {
   .bookmarks > li { grid-template-columns: 40px 1fr; gap: 12px; }
   .bookmarks .tile { width: 40px; height: 40px; font-size: 1.125rem; }
+  /* On narrow screens Edit and Delete move under the text instead of taking a column. */
+  .row-actions { grid-column: 2; margin: 4px 0 -6px -10px; }
+  .page-head .btn { padding: 0 14px; }
   .pager { flex-direction: column; align-items: stretch; text-align: center; }
   .pager .buttons .btn { flex: 1; }
 }

@@ -166,7 +166,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 7: Frontend
 
-- [ ] **7.1 API client and auth state**
+- [x] **7.1 API client and auth state**
   - **What:** A typed `client/src/api/` module wrapping `fetch` (with cookies), plus an auth context holding the current user.
   - **Acceptance criteria:**
     - All fetch calls live in `api/`

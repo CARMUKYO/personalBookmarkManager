@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { getHealth } from './api/health'
+import { useAuth } from './auth/useAuth'
 
+// Temporary status page. The real screens (login, bookmarks) replace it in tasks 7.2 to 7.4.
 function App() {
-  const [status, setStatus] = useState<string | null>(null)
+  const { user, status } = useAuth()
+  const [health, setHealth] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     getHealth()
-      .then((data) => setStatus(data.status))
+      .then((data) => setHealth(data.status))
       .catch((err: Error) => setError(err.message))
   }, [])
 
@@ -15,8 +18,11 @@ function App() {
     <main>
       <h1>Bookmark Manager</h1>
       {error && <p>API error: {error}</p>}
-      {!error && status === null && <p>Checking API...</p>}
-      {status && <p>API status: {status}</p>}
+      {!error && health === null && <p>Checking API...</p>}
+      {health && <p>API status: {health}</p>}
+      {status === 'loading' && <p>Checking your session...</p>}
+      {status === 'authenticated' && <p>Signed in as {user?.email}</p>}
+      {status === 'anonymous' && <p>Not signed in</p>}
     </main>
   )
 }

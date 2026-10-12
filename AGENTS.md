@@ -109,9 +109,8 @@ cd client && npm install
 npm run dev          # start UI on http://localhost:5173 (proxies /api to the backend on :3000)
 npm run build        # type-check and bundle
 npm run lint         # oxlint
+npm test             # run frontend tests (Vitest + Testing Library, in a jsdom fake browser)
 ```
-
-The client has no test setup yet; Vitest + Testing Library get added in task 7.1.
 
 ## Definition of done
 

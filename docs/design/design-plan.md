@@ -84,9 +84,11 @@ Motion only answers an action (a dialog opening). Nothing animates on load. `pre
 
 The mock predates these; where they differ, this section wins.
 
-- **Category management (7.7):** a "Manage categories" dialog, opened from a link next to the category dropdown.
-  It lists categories with Rename and Delete, and has a "New category" field. With no categories, the bookmark form says
-  "No categories yet" and links to the dialog instead of showing an empty row.
+- **Category management (7.7):** a "Manage categories" dialog, opened from a button in the page header next to
+  "Add bookmark" (first planned next to the category dropdown, but there it squeezed the search box, and the toolbar is
+  hidden for new users). It lists categories with Rename and Delete (both inside the row, never a dialog on a dialog),
+  and has a "New category" field. The bookmark form has its own "New category" field, so a category can be made
+  without leaving the form; with none yet it says "No categories yet. Add one below."
 - **Routing:** `react-router` (approved). Filters live in the URL query string.
 - **Extra states:** list failed to load ("Couldn't load your bookmarks" + "Try again"); session expired (any 401 sends you
   to sign in with "Your session ended, please sign in again"); email already registered (409, with a link to sign in);

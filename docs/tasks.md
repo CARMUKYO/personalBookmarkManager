@@ -234,7 +234,9 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
   - **Depends on:** 3.3
 
 - [ ] **8.2 Review with a second AI**
-  - **What:** Use Prompt 4 from `PROMPTS.md` with the other tool (Gemini) on the whole project.
+  - **What:** Have the other tool (Gemini) review the whole project with this prompt (formerly Prompt 4 in `PROMPTS.md`):
+    > Read AGENTS.md. Review the code. Check especially: does every bookmark/category query filter by the logged-in
+    > user's id? Are inputs validated? Are there missing tests? List problems, most serious first. Don't fix them yet.
   - **Acceptance criteria:**
     - Findings listed and each one fixed or consciously skipped
   - **Depends on:** all above

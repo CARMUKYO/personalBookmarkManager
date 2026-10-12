@@ -11,6 +11,8 @@ import { RegisterPage } from './RegisterPage'
 // The pages are tested against a fake network layer, so no server is needed.
 vi.mock('../api/auth')
 
+const tooManyMessage = 'Too many attempts. Please wait a few minutes and try again.'
+
 const alice = { id: 1, email: 'alice@example.com', createdAt: '2024-01-01T00:00:00.000Z' }
 
 // Starts the app at `path`. "/" is a stand-in home page, so a redirect is easy to spot.
@@ -46,6 +48,18 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('The email or password is wrong')
     expect(authApi.login).toHaveBeenCalledWith('alice@example.com', 'wrong-password')
     expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
+  })
+
+  it('shows the server message when there have been too many attempts (429)', async () => {
+    vi.mocked(authApi.login).mockRejectedValue(new ApiError(429, 'TOO_MANY_REQUESTS', tooManyMessage))
+    renderAt('/login')
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('Email'), 'alice@example.com')
+    await user.type(screen.getByLabelText('Password'), 'wrong-password')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(tooManyMessage)
   })
 
   it('asks for missing fields without calling the server', async () => {
@@ -159,6 +173,18 @@ describe('RegisterPage', () => {
 
     expect(await screen.findByText('Invalid email address')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('shows the server message when there have been too many sign-ups (429)', async () => {
+    vi.mocked(authApi.register).mockRejectedValue(new ApiError(429, 'TOO_MANY_REQUESTS', tooManyMessage))
+    renderAt('/register')
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('Email'), 'alice@example.com')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(tooManyMessage)
   })
 
   it('logs the new user in and goes to the home page', async () => {

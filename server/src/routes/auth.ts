@@ -1,4 +1,4 @@
-import { Router, type CookieOptions } from "express";
+import { Router, type CookieOptions, type RequestHandler } from "express";
 import { z } from "zod";
 import type { Config } from "../config.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
@@ -25,6 +25,7 @@ const loginSchema = z.object({
 export function authRouter(
   prisma: PrismaClient,
   config: Pick<Config, "jwtSecret" | "isProduction">,
+  limiters: { login: RequestHandler; register: RequestHandler },
 ) {
   const router = Router();
 
@@ -38,13 +39,14 @@ export function authRouter(
     path: "/",
   };
 
-  router.post("/register", validateBody(registerSchema), async (req, res) => {
+  // The rate limiter runs before validation, so requests with bad input count as attempts too.
+  router.post("/register", limiters.register, validateBody(registerSchema), async (req, res) => {
     const { email, password } = req.body as z.infer<typeof registerSchema>;
     const user = await registerUser(prisma, email, password);
     res.status(201).json({ user });
   });
 
-  router.post("/login", validateBody(loginSchema), async (req, res) => {
+  router.post("/login", limiters.login, validateBody(loginSchema), async (req, res) => {
     const { email, password } = req.body as z.infer<typeof loginSchema>;
     const user = await loginUser(prisma, email, password);
     const token = await signToken(user.id, config.jwtSecret);

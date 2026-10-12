@@ -226,7 +226,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
 
 ## Milestone 8: Hardening and polish
 
-- [ ] **8.1 Security pass**
+- [x] **8.1 Security pass**
   - **What:** Add `helmet`, rate limiting on login/register, and confirm cookie flags (`secure` in production, `sameSite`). Think about CSRF given cookie auth.
   - **Acceptance criteria:**
     - Repeated failed logins get a 429

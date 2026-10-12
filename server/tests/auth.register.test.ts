@@ -6,7 +6,12 @@ import { createPrismaClient } from "../src/db.js";
 import { testConfig } from "./helpers.js";
 
 const prisma = createPrismaClient(process.env.DATABASE_URL!);
-const app = createApp({ prisma, config: testConfig });
+// This file signs up more than the default 10 times, so raise the limit (rate limiting is tested in security.test.ts).
+const app = createApp({
+  prisma,
+  config: testConfig,
+  rateLimits: { register: { limit: 1000, windowMs: 60_000 } },
+});
 
 const register = (body: unknown) => request(app).post("/api/auth/register").send(body as object);
 

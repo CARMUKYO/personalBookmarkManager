@@ -1,10 +1,10 @@
 import { Route, Routes } from 'react-router'
 import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './components/RequireAuth'
+import { BookmarksPage } from './pages/BookmarksPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
-import { StatusPage } from './pages/StatusPage'
 
 // Every page of the app and the address it lives at.
 function App() {
@@ -18,7 +18,7 @@ function App() {
           </RequireAuth>
         }
       >
-        <Route path="/" element={<StatusPage />} />
+        <Route path="/" element={<BookmarksPage />} />
       </Route>
 
       <Route path="/login" element={<LoginPage />} />

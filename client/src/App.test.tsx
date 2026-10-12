@@ -10,12 +10,14 @@ const alice = { id: 1, email: 'alice@example.com', createdAt: '2024-01-01T00:00:
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status })
 const notLoggedIn = () => json(401, { error: { code: 'UNAUTHORIZED', message: 'Not logged in' } })
 
-// A fake server. `loggedIn` says what /me answers; /health answers `health` (a 401 there simulates an expired session).
-function fakeServer({ loggedIn, health = () => json(200, { status: 'ok' }) }: { loggedIn: boolean; health?: () => Response }) {
+const emptyList = () => json(200, { data: [], page: 1, pageSize: 20, total: 0, totalPages: 0 })
+
+// A fake server. `loggedIn` says what /me answers; /bookmarks answers `bookmarks` (a 401 there simulates an expired session).
+function fakeServer({ loggedIn, bookmarks = emptyList }: { loggedIn: boolean; bookmarks?: () => Response }) {
   const fetchMock = vi.fn(async (url: string) => {
     if (url === '/api/auth/me') return loggedIn ? json(200, { user: alice }) : notLoggedIn()
     if (url === '/api/auth/logout') return new Response(null, { status: 204 })
-    if (url === '/api/health') return health()
+    if (url.startsWith('/api/bookmarks')) return bookmarks()
     return json(404, { error: { code: 'NOT_FOUND', message: 'Not found' } })
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -49,7 +51,7 @@ describe('App routing', () => {
 
     expect(await screen.findByRole('heading', { name: 'Your bookmarks' })).toBeInTheDocument()
     expect(screen.getByText('alice@example.com')).toBeInTheDocument()
-    expect(await screen.findByText('API status: ok')).toBeInTheDocument()
+    expect(await screen.findByText('No bookmarks yet')).toBeInTheDocument()
   })
 
   it('logs out and goes to the sign-in page', async () => {
@@ -81,7 +83,7 @@ describe('App routing', () => {
 
   it('sends the user to sign in with a message when the session ends', async () => {
     // /me still says "logged in", but the next request is turned away: the token expired in between.
-    fakeServer({ loggedIn: true, health: notLoggedIn })
+    fakeServer({ loggedIn: true, bookmarks: notLoggedIn })
     renderAt('/')
 
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()

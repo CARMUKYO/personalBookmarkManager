@@ -41,9 +41,14 @@ describe('tileFor', () => {
   })
 
   it('spreads different sites over several hues', () => {
-    const sites = ['react.dev', 'seriouseats.com', 'mozilla.org', 'ycombinator.com', 'css-tricks.com', 'brailleinstitute.org']
-    const hues = new Set(sites.map((site) => tileFor(`https://${site}`).hue))
-    expect(hues.size).toBeGreaterThanOrEqual(3)
+    // The first eight sites of the seed data. Before the hash was improved, four of these shared one colour.
+    const sites = [
+      'news.ycombinator.com', 'seriouseats.com', 'newsletter.pragmaticengineer.com', 'en.wikipedia.org',
+      'smashingmagazine.com', 'bbc.com', 'gutenberg.org', 'lonelyplanet.com',
+    ]
+    const hues = sites.map((site) => tileFor(`https://${site}`).hue)
+    expect(new Set(hues).size).toBeGreaterThanOrEqual(5)
+    for (const hue of new Set(hues)) expect(hues.filter((h) => h === hue).length).toBeLessThanOrEqual(2)
   })
 
   it('falls back to a grey "?" tile for text that is not an address', () => {

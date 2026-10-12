@@ -196,7 +196,7 @@ Work top to bottom. Each task is about 30-90 minutes. Tick `[x]` when done and t
     - Logout clears the session and redirects
   - **Depends on:** 7.2
 
-- [ ] **7.4 Bookmark list with pagination**
+- [x] **7.4 Bookmark list with pagination**
   - **What:** Show the user's bookmarks with page controls, loading and empty states.
   - **Acceptance criteria:**
     - Previous/Next buttons work and disable at the ends

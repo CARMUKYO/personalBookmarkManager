@@ -249,6 +249,52 @@ dialog[open] { animation: pop 140ms ease-out; }
   .page-head h1 { font-size: 1.5rem; }
 }
 
+/* ---------- Bookmark list ---------- */
+.results { display: grid; gap: var(--space-5); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-dialog); overflow: hidden; }
+.panel-message { padding: var(--space-6) var(--space-5); color: var(--muted); text-align: center; }
+.bookmarks > li { display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; padding: 16px; }
+.bookmarks > li + li { border-top: 1px solid var(--line); }
+.bookmarks > li:hover { background: var(--row-hover); }
+/* While the next page loads, the old rows stay but look inactive. */
+.bookmarks[aria-busy='true'] { opacity: 0.6; transition: opacity 150ms; }
+.row-body { min-width: 0; display: grid; gap: 2px; }
+.row-title { font-family: var(--font-display); font-weight: 650; font-size: 1.125rem; line-height: 1.3; letter-spacing: -0.005em; }
+.row-title a { text-decoration: none; overflow-wrap: anywhere; }
+.row-title a:hover {
+  text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 4px;
+}
+.row-meta { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); color: var(--muted); font-size: 0.875rem; }
+.row-meta span { overflow-wrap: anywhere; }
+.row-note {
+  color: var(--muted); max-width: 65ch; margin-top: 4px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chips li {
+  padding: 1px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--paper); color: var(--muted); font-size: 0.8125rem; line-height: 1.6;
+}
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); color: var(--muted); font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
+.pager .buttons { display: flex; gap: var(--space-2); }
+
+/* Empty, error and no-results messages inside the panel */
+.empty { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 56px 24px; }
+.empty .tile-stack { display: flex; margin-bottom: 4px; }
+.empty .tile-stack .tile { width: 48px; height: 48px; border: 3px solid var(--surface); margin-left: -10px; }
+.empty .tile-stack .tile:first-child { margin-left: 0; }
+.empty h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; letter-spacing: -0.01em; }
+.empty p { color: var(--muted); max-width: 42ch; }
+.empty .btn { margin-top: 8px; }
+
+@container (max-width: 640px) {
+  .bookmarks > li { grid-template-columns: 40px 1fr; gap: 12px; }
+  .bookmarks .tile { width: 40px; height: 40px; font-size: 1.125rem; }
+  .pager { flex-direction: column; align-items: stretch; text-align: center; }
+  .pager .buttons .btn { flex: 1; }
+}
+
 /* ---------- Sign in and create account ---------- */
 .simple-page.auth .content { gap: var(--space-5); justify-items: stretch; }
 .simple-page.auth .lede { margin-top: 6px; }

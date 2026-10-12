@@ -1,5 +1,5 @@
 import request from "supertest";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app.js";
 import { createPrismaClient } from "../src/db.js";
 import { registerUser } from "../src/services/auth.js";
@@ -28,6 +28,10 @@ const badLogin = { email: "user@example.com", password: "wrong-password" };
 beforeEach(async () => {
   await prisma.user.deleteMany();
   await registerUser(prisma, goodLogin.email, goodLogin.password);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 afterAll(async () => {
@@ -157,5 +161,36 @@ describe("CSRF: non-JSON bodies are not accepted", () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
     expect(await prisma.bookmark.count()).toBe(0);
+  });
+
+  it("rejects a multipart/form-data POST to /api/bookmarks with 400", async () => {
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: goodLogin.email } });
+    const cookie = `token=${await signToken(user.id, TEST_JWT_SECRET)}`;
+
+    const res = await request(makeApp())
+      .post("/api/bookmarks")
+      .set("Cookie", cookie)
+      .field("url", "https://evil.example")
+      .field("title", "Evil");
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(await prisma.bookmark.count()).toBe(0);
+  });
+});
+
+describe("oversized request bodies", () => {
+  it("answers 413 in the standard error shape for a JSON body over 100 KB", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await request(makeApp())
+      .post("/api/auth/login")
+      .send({ email: goodLogin.email, password: "x".repeat(110 * 1024) });
+
+    expect(res.status).toBe(413);
+    expect(res.body).toEqual({
+      error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large" },
+    });
+    expect(consoleError).not.toHaveBeenCalled();
   });
 });

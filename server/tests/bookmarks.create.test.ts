@@ -57,6 +57,19 @@ describe("POST /api/bookmarks", () => {
     expect(res.body.bookmark.description).toBeNull();
   });
 
+  it.each([
+    ["null", null],
+    ["an empty string", ""],
+    ["only spaces", "   "],
+  ])("stores a description of %s as null", async (_name, description) => {
+    const res = await create({ ...validBody, description });
+
+    expect(res.status).toBe(201);
+    expect(res.body.bookmark.description).toBeNull();
+    const saved = await prisma.bookmark.findUnique({ where: { id: res.body.bookmark.id } });
+    expect(saved?.description).toBeNull();
+  });
+
   it("links the bookmark to the given categories", async () => {
     const news = await prisma.category.create({ data: { name: "News", userId: alice.id } });
     const dev = await prisma.category.create({ data: { name: "Dev", userId: alice.id } });
@@ -103,6 +116,7 @@ describe("POST /api/bookmarks", () => {
       ["categoryIds not an array", { ...validBody, categoryIds: 5 }],
       ["categoryIds with a string", { ...validBody, categoryIds: ["a"] }],
       ["categoryIds with a decimal", { ...validBody, categoryIds: [1.5] }],
+      ["more than 50 categoryIds", { ...validBody, categoryIds: Array.from({ length: 51 }, (_, i) => i + 1) }],
     ])("rejects %s", async (_name, body) => {
       const res = await create(body);
 

@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { createApp } from "../src/app.js";
 import { createPrismaClient } from "../src/db.js";
 import { registerUser } from "../src/services/auth.js";
+import { signToken } from "../src/services/token.js";
 import { TEST_JWT_SECRET, testConfig } from "./helpers.js";
 
 const prisma = createPrismaClient(process.env.DATABASE_URL!);
@@ -130,13 +131,23 @@ describe("POST /api/auth/login", () => {
 
 describe("POST /api/auth/logout", () => {
   it("returns 204 and clears the cookie", async () => {
-    const res = await request(app).post("/api/auth/logout");
+    const token = await signToken(userId, TEST_JWT_SECRET);
+    const res = await request(app).post("/api/auth/logout").set("Cookie", `token=${token}`);
     const cookie = getTokenCookie(res)!;
 
     expect(res.status).toBe(204);
     expect(cookie).toMatch(/^token=;/);
     expect(cookie).toMatch(/Expires=Thu, 01 Jan 1970/i);
     expect(cookie).toMatch(/HttpOnly/i);
+  });
+
+  // A form POST from another site arrives without our SameSite=Lax cookie. If the response still said
+  // "clear the cookie", the browser would obey it and the user would be logged out.
+  it("returns 204 without a Set-Cookie header when no cookie is sent", async () => {
+    const res = await request(app).post("/api/auth/logout");
+
+    expect(res.status).toBe(204);
+    expect(res.headers["set-cookie"]).toBeUndefined();
   });
 
   it("works without being logged in, and when called twice", async () => {

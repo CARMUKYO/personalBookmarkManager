@@ -125,6 +125,7 @@ describe("PATCH /api/bookmarks/:id", () => {
       ["a javascript: url", { url: "javascript:alert(1)" }],
       ["a description that is too long", { description: "x".repeat(2001) }],
       ["categoryIds that is not an array", { categoryIds: 3 }],
+      ["more than 50 categoryIds", { categoryIds: Array.from({ length: 51 }, (_, i) => i + 1) }],
     ])("rejects %s and changes nothing", async (_name, body) => {
       const res = await patch(bookmarkId, body);
 

@@ -17,7 +17,7 @@ const publicBookmarkSelect = {
 export type NewBookmark = {
   url: string;
   title: string;
-  description?: string | undefined;
+  description?: string | null | undefined;
   categoryIds?: number[] | undefined;
 };
 

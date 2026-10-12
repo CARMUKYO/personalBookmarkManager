@@ -63,9 +63,14 @@ export function authRouter(
   });
 
   // Works whether or not you're logged in, so calling it twice is harmless.
+  // The cookie is only cleared if the request carries it. A form POST from another site doesn't carry our
+  // SameSite=Lax cookie, but the browser would still apply a Set-Cookie from the response, so without this
+  // check any site could log you out. (See docs/security.md.)
   // Note: a JWT is stateless, so this removes the cookie but cannot revoke a copied token before it expires.
-  router.post("/logout", (_req, res) => {
-    res.clearCookie(AUTH_COOKIE, cookieOptions);
+  router.post("/logout", (req, res) => {
+    if (req.cookies[AUTH_COOKIE]) {
+      res.clearCookie(AUTH_COOKIE, cookieOptions);
+    }
     res.status(204).end();
   });
 

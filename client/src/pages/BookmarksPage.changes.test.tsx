@@ -102,7 +102,7 @@ describe('adding a bookmark', () => {
     expect(createBookmark).toHaveBeenCalledWith({
       url: 'https://react.dev/learn',
       title: 'React docs',
-      description: undefined,
+      description: null,
       categoryIds: [1],
     })
     expect(await screen.findByRole('link', { name: /React docs/ })).toBeInTheDocument()

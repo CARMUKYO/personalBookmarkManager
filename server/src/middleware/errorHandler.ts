@@ -26,6 +26,10 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     // express.json() could not parse the request body.
     status = 400;
     body = { error: { code: "INVALID_JSON", message: "Request body is not valid JSON" } };
+  } else if (err?.type === "entity.too.large") {
+    // express.json() refused a body over its size limit (100 KB by default).
+    status = 413;
+    body = { error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large" } };
   } else {
     // Unexpected: log the real error, but never send its details to the client.
     console.error(err);

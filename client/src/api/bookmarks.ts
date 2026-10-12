@@ -23,7 +23,7 @@ export function listBookmarks(params: ListBookmarksParams = {}): Promise<Page<Bo
   return request<Page<Bookmark>>(queryString ? `/bookmarks?${queryString}` : '/bookmarks')
 }
 
-// What the add/edit form sends. description: null (or '') clears it when editing.
+// What the add/edit form sends. description: null (or '') means no description, and clears it when editing.
 export type BookmarkInput = {
   url: string
   title: string

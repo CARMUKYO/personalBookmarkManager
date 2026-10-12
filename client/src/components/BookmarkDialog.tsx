@@ -106,8 +106,8 @@ export function BookmarkDialog({
       const input = {
         url: url.trim(),
         title: title.trim(),
-        // An empty note is left out when adding, and sent as null when editing (which clears it).
-        description: description.trim() || (isEdit ? null : undefined),
+        // An empty note is sent as null: no description when adding, and clears it when editing.
+        description: description.trim() || null,
         categoryIds,
       }
       const saved = isEdit ? await updateBookmark(bookmark.id, input) : await createBookmark(input)

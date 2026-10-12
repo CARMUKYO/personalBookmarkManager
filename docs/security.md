@@ -59,8 +59,21 @@ talks to one origin.)
 
 ### Logout
 
-`POST /api/auth/logout` has no body, so layer 2 doesn't apply to it. Layer 1 still does: from another site the
-cookie isn't sent. Even in the worst case, the attacker could only log you out, which is annoying but harmless.
+`POST /api/auth/logout` has no body, so layer 2 doesn't apply to it. It also needs no login, on purpose: if your
+session has already expired, clicking "Log out" should still work.
+
+Layer 1 alone wasn't enough here, which the Gemini review (task 8.2) pointed out:
+
+- A hidden `<form method="POST" action=".../api/auth/logout">` on another site arrives **without** our cookie,
+  because of `SameSite=Lax`.
+- But the browser still **obeys the response**. SameSite controls which cookies are *sent*, not which ones a
+  response may *set or clear*.
+- The form submit is a top-level navigation, so if the response said "clear the `token` cookie"
+  (a `Set-Cookie` header with an expiry date in the past), the browser would do it. You'd be logged out.
+
+**The fix:** the server only clears the cookie when the request actually carries it. A request from another site
+never carries it, so its response has no `Set-Cookie` header and your cookie is left alone. It still answers
+204, so logging out twice is still harmless. `server/tests/auth.login.test.ts` checks both cases.
 
 ### Conclusion
 

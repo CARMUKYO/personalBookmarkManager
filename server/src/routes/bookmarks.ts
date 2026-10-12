@@ -33,7 +33,14 @@ const httpUrl = z
 const createBookmarkSchema = z.object({
   url: httpUrl,
   title: z.string().trim().min(1, "Title is required").max(200),
-  description: z.string().trim().max(2000).optional(),
+  // null, "" and whitespace-only are all stored as null (no description), same as on update.
+  description: z
+    .string()
+    .trim()
+    .max(2000)
+    .nullable()
+    .transform((value) => value || null)
+    .optional(),
   categoryIds: z.array(z.number().int().positive()).max(50).optional(),
 });
 
